@@ -10,24 +10,23 @@ DEST="${1:-$PWD/app-debug.apk}"
 
 REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+SHA="$(git rev-parse HEAD)"
 
 echo "Pushing $BRANCH to $REPO..."
 git push origin "$BRANCH"
 
-LAST_ID="$(gh run list --repo "$REPO" --workflow "$WORKFLOW" --limit 1 --json databaseId --jq '.[0].databaseId // 0')"
-
-echo "Dispatching build..."
-gh workflow run "$WORKFLOW" --repo "$REPO" --ref "$BRANCH"
-
-echo "Waiting for the new run to register..."
-RUN_ID="$LAST_ID"
+# The push above already triggers the workflow (on: push). Find that run by
+# head SHA rather than also dispatching, which would start a second,
+# untracked run and leave its artifact behind.
+echo "Waiting for the run triggered by $SHA to register..."
+RUN_ID=""
 for _ in $(seq 1 30); do
+  RUN_ID="$(gh run list --repo "$REPO" --workflow "$WORKFLOW" --json databaseId,headSha --jq "[.[] | select(.headSha==\"$SHA\")] | sort_by(.databaseId) | last | .databaseId // empty")"
+  [ -n "$RUN_ID" ] && break
   sleep 2
-  RUN_ID="$(gh run list --repo "$REPO" --workflow "$WORKFLOW" --limit 1 --json databaseId --jq '.[0].databaseId')"
-  [ "$RUN_ID" != "$LAST_ID" ] && break
 done
-if [ "$RUN_ID" == "$LAST_ID" ]; then
-  echo "Timed out waiting for a new run to start." >&2
+if [ -z "$RUN_ID" ]; then
+  echo "Timed out waiting for a run for $SHA to start." >&2
   exit 1
 fi
 
@@ -36,7 +35,11 @@ gh run watch "$RUN_ID" --repo "$REPO" --exit-status
 
 echo "Downloading APK..."
 TMPDIR="$(mktemp -d)"
-gh run download "$RUN_ID" --repo "$REPO" --dir "$TMPDIR"
+if ! gh run download "$RUN_ID" --repo "$REPO" --dir "$TMPDIR"; then
+  echo "Download failed - if this SHA was already pulled by a previous run of this script, its artifact was already deleted. Commit something new and try again." >&2
+  rm -rf "$TMPDIR"
+  exit 1
+fi
 APK="$(find "$TMPDIR" -name '*.apk' | head -1)"
 if [ -z "$APK" ]; then
   echo "No APK found in the run's artifacts." >&2
