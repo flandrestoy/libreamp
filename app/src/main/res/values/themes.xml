@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.LibreAmp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#6750A4</item>
+        <item name="colorPrimaryDark">#4F378B</item>
+        <item name="colorAccent">#D0BCFF</item>
+    </style>
+</resources>

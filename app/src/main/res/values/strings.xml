@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">LibreAmp</string>
+    <string name="tab_now_playing">Now Playing</string>
+    <string name="tab_playlist">Playlist</string>
+    <string name="action_add_files">Add files</string>
+    <string name="action_sort">Sort</string>
+    <string name="action_group">Group</string>
+    <string name="action_delete">Delete</string>
+    <string name="drag_disabled_grouped">Turn off grouping to reorder tracks manually</string>
+    <string name="switched_to_manual_sort">Sort switched to Manual</string>
+    <string name="notif_channel_playback">Playback</string>
+</resources>

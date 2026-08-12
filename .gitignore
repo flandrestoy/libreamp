@@ -1,0 +1,30 @@
+# Build outputs
+/app/build/
+/build/
+.gradle/
+*.apk
+*.aab
+
+# Local machine config (SDK path is device-specific)
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Claude Code local session/permissions state
+.claude/
+
+# Native build scratch (ffmpeg source/build dirs if ever pulled locally)
+native/build/
+native/ffmpeg-src/
+
+# Misc test assets not part of the app
+*.mp3
+*.wav
+*.jpg
+*.jpeg
+*.png
+!app/src/**/*.png
+!app/src/**/*.jpg
