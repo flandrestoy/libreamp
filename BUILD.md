@@ -15,6 +15,12 @@ is now the primary way builds get produced and verified. It runs
 as a build artifact (retention: 1 day). Local builds on-device are still fine
 for quick iteration, just don't expect them to be fast.
 
+Run `scripts/build_and_pull.sh [dest-path]` to push, trigger a build, wait
+for it, copy the APK locally (default: `./app-debug.apk`), and delete the
+remote artifact immediately afterward. Retention is already capped at 1 day
+as a backstop, but with several builds per iteration cycle this keeps things
+tidy without waiting on that.
+
 ## Native ffmpeg library
 
 `app/src/main/jniLibs/arm64-v8a/libffmpeg_player.so` is a prebuilt static
