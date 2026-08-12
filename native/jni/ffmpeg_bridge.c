@@ -16,6 +16,9 @@
 #include <sys/stat.h>
 
 #include <libavcodec/avcodec.h>
+#include <libavfilter/avfilter.h>
+#include <libavfilter/buffersink.h>
+#include <libavfilter/buffersrc.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libavutil/avutil.h>
@@ -54,6 +57,17 @@ typedef struct {
 
     AVPacket *pkt;
     AVFrame *frame;
+
+    // Optional libavfilter effects chain (equalizer, crossfeed, ...) inserted
+    // between the decoder and swresample. The graph is constrained to emit the
+    // decoder's own sample format/rate/layout so the swr context stays valid
+    // whether or not a graph is active.
+    AVFilterGraph *filter_graph;
+    AVFilterContext *buffersrc_ctx;
+    AVFilterContext *buffersink_ctx;
+    AVFrame *filt_frame;
+    AVChannelLayout graph_layout;
+    char *filter_desc;       // owned copy, so the graph can be rebuilt after a seek
 
     int target_sample_rate;
     int64_t duration_us;
@@ -178,17 +192,139 @@ static int convert_and_append(PlayerContext *ctx, AVFrame *frame) {
     return rc;
 }
 
+// ---------------------------------------------------------------------------
+// libavfilter effects chain
+// ---------------------------------------------------------------------------
+
+static void free_filter_graph(PlayerContext *ctx) {
+    if (ctx->filter_graph) avfilter_graph_free(&ctx->filter_graph);
+    ctx->buffersrc_ctx = NULL;
+    ctx->buffersink_ctx = NULL;
+}
+
+/**
+ * Builds abuffer -> [filter_desc] -> abuffersink, pinned to the decoder's own
+ * output format so downstream swresample needs no reconfiguration. Any format
+ * conversion a filter needs is auto-negotiated by avfilter internally.
+ * Returns 0 on success; on failure the graph is torn down (unfiltered passthrough).
+ */
+static int build_filter_graph(PlayerContext *ctx, const char *filter_desc) {
+    free_filter_graph(ctx);
+    if (!filter_desc || !*filter_desc) return 0; // no effects: passthrough
+
+    const AVFilter *abuffersrc = avfilter_get_by_name("abuffer");
+    const AVFilter *abuffersink = avfilter_get_by_name("abuffersink");
+    AVFilterInOut *outputs = avfilter_inout_alloc();
+    AVFilterInOut *inputs = avfilter_inout_alloc();
+    ctx->filter_graph = avfilter_graph_alloc();
+    int rc = -1;
+
+    if (!abuffersrc || !abuffersink || !outputs || !inputs || !ctx->filter_graph) {
+        LOGE("build_filter_graph: allocation failed");
+        goto done;
+    }
+
+    char layout_str[64];
+    av_channel_layout_describe(&ctx->graph_layout, layout_str, sizeof(layout_str));
+
+    char src_args[256];
+    snprintf(src_args, sizeof(src_args),
+             "time_base=1/%d:sample_rate=%d:sample_fmt=%s:channel_layout=%s",
+             ctx->codec_ctx->sample_rate, ctx->codec_ctx->sample_rate,
+             av_get_sample_fmt_name(ctx->codec_ctx->sample_fmt), layout_str);
+
+    if ((rc = avfilter_graph_create_filter(&ctx->buffersrc_ctx, abuffersrc, "in",
+                                           src_args, NULL, ctx->filter_graph)) < 0) {
+        LOGE("build_filter_graph: abuffer create failed: %d", rc);
+        goto done;
+    }
+    if ((rc = avfilter_graph_create_filter(&ctx->buffersink_ctx, abuffersink, "out",
+                                           NULL, NULL, ctx->filter_graph)) < 0) {
+        LOGE("build_filter_graph: abuffersink create failed: %d", rc);
+        goto done;
+    }
+
+    // Pin the sink to the decoder's format so convert_and_append/swr stay valid.
+    const enum AVSampleFormat sink_fmts[] = {ctx->codec_ctx->sample_fmt, AV_SAMPLE_FMT_NONE};
+    const int sink_rates[] = {ctx->codec_ctx->sample_rate, -1};
+    if ((rc = av_opt_set_int_list(ctx->buffersink_ctx, "sample_fmts", sink_fmts,
+                                  AV_SAMPLE_FMT_NONE, AV_OPT_SEARCH_CHILDREN)) < 0 ||
+        (rc = av_opt_set_int_list(ctx->buffersink_ctx, "sample_rates", sink_rates,
+                                  -1, AV_OPT_SEARCH_CHILDREN)) < 0 ||
+        (rc = av_opt_set(ctx->buffersink_ctx, "ch_layouts", layout_str,
+                         AV_OPT_SEARCH_CHILDREN)) < 0) {
+        LOGE("build_filter_graph: sink format pinning failed: %d", rc);
+        goto done;
+    }
+
+    // Naming is from the parsed sub-graph's perspective: its unlinked input is
+    // fed by our buffersrc, its unlinked output feeds our buffersink.
+    outputs->name = av_strdup("in");
+    outputs->filter_ctx = ctx->buffersrc_ctx;
+    outputs->pad_idx = 0;
+    outputs->next = NULL;
+    inputs->name = av_strdup("out");
+    inputs->filter_ctx = ctx->buffersink_ctx;
+    inputs->pad_idx = 0;
+    inputs->next = NULL;
+    if (!outputs->name || !inputs->name) {
+        rc = AVERROR(ENOMEM);
+        goto done;
+    }
+
+    if ((rc = avfilter_graph_parse_ptr(ctx->filter_graph, filter_desc,
+                                       &inputs, &outputs, NULL)) < 0) {
+        LOGE("build_filter_graph: parse failed for '%s': %d", filter_desc, rc);
+        goto done;
+    }
+    if ((rc = avfilter_graph_config(ctx->filter_graph, NULL)) < 0) {
+        LOGE("build_filter_graph: config failed: %d", rc);
+        goto done;
+    }
+    rc = 0;
+    LOGI("filter graph active: %s", filter_desc);
+
+done:
+    avfilter_inout_free(&inputs);
+    avfilter_inout_free(&outputs);
+    if (rc < 0) free_filter_graph(ctx);
+    return rc;
+}
+
+// Push one decoded frame through the graph and append every frame it yields.
+static int filter_and_append(PlayerContext *ctx, AVFrame *frame) {
+    int rc = av_buffersrc_add_frame_flags(ctx->buffersrc_ctx, frame,
+                                          AV_BUFFERSRC_FLAG_KEEP_REF);
+    if (rc < 0) {
+        LOGW("av_buffersrc_add_frame failed: %d", rc);
+        return -1;
+    }
+    while (1) {
+        rc = av_buffersink_get_frame(ctx->buffersink_ctx, ctx->filt_frame);
+        if (rc == AVERROR(EAGAIN) || rc == AVERROR_EOF) return 0;
+        if (rc < 0) {
+            LOGW("av_buffersink_get_frame failed: %d", rc);
+            return -1;
+        }
+        int append_rc = convert_and_append(ctx, ctx->filt_frame);
+        av_frame_unref(ctx->filt_frame);
+        if (append_rc < 0) return -1;
+    }
+}
+
 // Pull any frames the decoder already has buffered (call after send_packet).
 static int drain_decoder(PlayerContext *ctx) {
     int ret;
     while ((ret = avcodec_receive_frame(ctx->codec_ctx, ctx->frame)) == 0) {
-        if (convert_and_append(ctx, ctx->frame) < 0) {
-            av_frame_unref(ctx->frame);
-            return -1;
-        }
+        int rc = ctx->filter_graph ? filter_and_append(ctx, ctx->frame)
+                                   : convert_and_append(ctx, ctx->frame);
         av_frame_unref(ctx->frame);
+        if (rc < 0) return -1;
     }
     if (ret == AVERROR_EOF) {
+        // Flush the graph so its internal buffering (e.g. firequalizer's FIR
+        // delay) is emitted rather than truncated at end-of-track.
+        if (ctx->filter_graph) filter_and_append(ctx, NULL);
         ctx->fully_drained = 1;
     } else if (ret != AVERROR(EAGAIN)) {
         LOGW("avcodec_receive_frame error: %d", ret);
@@ -241,10 +377,14 @@ static void fill_scratch(PlayerContext *ctx, size_t want_bytes) {
 
 static void free_player_context(PlayerContext *ctx) {
     if (!ctx) return;
+    free_filter_graph(ctx);
+    if (ctx->filter_desc) av_freep(&ctx->filter_desc);
+    av_channel_layout_uninit(&ctx->graph_layout);
     if (ctx->swr_ctx) swr_free(&ctx->swr_ctx);
     if (ctx->codec_ctx) avcodec_free_context(&ctx->codec_ctx);
     if (ctx->pkt) av_packet_free(&ctx->pkt);
     if (ctx->frame) av_frame_free(&ctx->frame);
+    if (ctx->filt_frame) av_frame_free(&ctx->filt_frame);
     if (ctx->fmt_ctx) {
         // AVFMT_FLAG_CUSTOM_IO means avformat_close_input will NOT free avio_ctx.
         avformat_close_input(&ctx->fmt_ctx);
@@ -376,6 +516,8 @@ Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeOpen(
                                       &out_layout, OUT_SAMPLE_FMT, ctx->target_sample_rate,
                                       &in_layout, ctx->codec_ctx->sample_fmt, ctx->codec_ctx->sample_rate,
                                       0, NULL);
+    // Kept for the filter graph, which must emit exactly what swr expects here.
+    av_channel_layout_copy(&ctx->graph_layout, &in_layout);
     av_channel_layout_uninit(&in_layout);
     if (swr_rc < 0 || !ctx->swr_ctx || swr_init(ctx->swr_ctx) < 0) {
         LOGE("swresample init failed");
@@ -385,7 +527,8 @@ Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeOpen(
 
     ctx->pkt = av_packet_alloc();
     ctx->frame = av_frame_alloc();
-    if (!ctx->pkt || !ctx->frame) {
+    ctx->filt_frame = av_frame_alloc();
+    if (!ctx->pkt || !ctx->frame || !ctx->filt_frame) {
         free_player_context(ctx);
         return 0;
     }
@@ -458,6 +601,10 @@ Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeSeekUs(
         return JNI_FALSE;
     }
     avcodec_flush_buffers(ctx->codec_ctx);
+    // Rebuild rather than reuse: the graph may already have been flushed to EOF
+    // at end-of-track (which would reject further input), and rebuilding also
+    // drops stale filter tails (echo, FIR delay) from the pre-seek position.
+    if (ctx->filter_desc) build_filter_graph(ctx, ctx->filter_desc);
     ctx->scratch_len = 0;
     ctx->scratch_pos = 0;
     ctx->eof_from_demuxer = 0;
@@ -526,6 +673,52 @@ Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeClose(
     (void) env; (void) thiz;
     PlayerContext *ctx = (PlayerContext *) (intptr_t) handle;
     free_player_context(ctx);
+}
+
+/**
+ * Installs (or clears, when [filterDesc] is null/empty) an ffmpeg filter-graph
+ * string such as "superequalizer=1b=6:2b=4" or "bass=g=5,crossfeed=strength=0.4".
+ * Like every other native call, this MUST run on the decode thread.
+ * Returns JNI_TRUE if the requested chain is now active.
+ */
+JNIEXPORT jboolean JNICALL
+Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeSetFilterGraph(
+        JNIEnv *env, jobject thiz, jlong handle, jstring filterDesc) {
+    (void) thiz;
+    PlayerContext *ctx = (PlayerContext *) (intptr_t) handle;
+    if (!ctx || !ctx->codec_ctx) return JNI_FALSE;
+
+    const char *desc = filterDesc ? (*env)->GetStringUTFChars(env, filterDesc, NULL) : NULL;
+    int rc = build_filter_graph(ctx, desc);
+    if (ctx->filter_desc) av_freep(&ctx->filter_desc);
+    if (rc == 0 && desc && *desc) ctx->filter_desc = av_strdup(desc);
+    if (desc) (*env)->ReleaseStringUTFChars(env, filterDesc, desc);
+    return rc == 0 ? JNI_TRUE : JNI_FALSE;
+}
+
+/**
+ * Adjusts a parameter on an already-running filter without rebuilding the graph
+ * (e.g. target "equalizer", cmd "gain", arg "5"), for click-free live EQ edits.
+ * Returns JNI_TRUE if the filter accepted the command.
+ */
+JNIEXPORT jboolean JNICALL
+Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeSendFilterCommand(
+        JNIEnv *env, jobject thiz, jlong handle, jstring target, jstring cmd, jstring arg) {
+    (void) thiz;
+    PlayerContext *ctx = (PlayerContext *) (intptr_t) handle;
+    if (!ctx || !ctx->filter_graph || !target || !cmd) return JNI_FALSE;
+
+    const char *t = (*env)->GetStringUTFChars(env, target, NULL);
+    const char *c = (*env)->GetStringUTFChars(env, cmd, NULL);
+    const char *a = arg ? (*env)->GetStringUTFChars(env, arg, NULL) : "";
+    char response[256];
+    int rc = avfilter_graph_send_command(ctx->filter_graph, t, c, a,
+                                          response, sizeof(response), 0);
+    if (rc < 0) LOGW("send_command %s.%s=%s failed: %d (%s)", t, c, a, rc, response);
+    (*env)->ReleaseStringUTFChars(env, target, t);
+    (*env)->ReleaseStringUTFChars(env, cmd, c);
+    if (arg) (*env)->ReleaseStringUTFChars(env, arg, a);
+    return rc >= 0 ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jstring JNICALL

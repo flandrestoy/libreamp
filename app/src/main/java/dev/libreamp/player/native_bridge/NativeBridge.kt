@@ -37,6 +37,19 @@ object NativeBridge {
 
     external fun nativeClose(handle: Long)
 
+    /**
+     * Installs an ffmpeg filter-graph string (e.g. "superequalizer=1b=6:2b=4",
+     * "bass=g=5,crossfeed=strength=0.4"), or clears the chain when [filterDesc]
+     * is null. Returns false if the chain could not be built, in which case
+     * playback continues unfiltered.
+     */
+    external fun nativeSetFilterGraph(handle: Long, filterDesc: String?): Boolean
+
+    /** Live-tweaks one parameter of a running filter without rebuilding the graph. */
+    external fun nativeSendFilterCommand(
+        handle: Long, target: String, cmd: String, arg: String?
+    ): Boolean
+
     external fun nativeGetFfmpegConfig(): String
 
     fun tagsToMap(flat: Array<String>): Map<String, String> {

@@ -22,7 +22,7 @@ mkdir -p "$OUT_DIR"
   -I"$PREFIX/include" -L"$PREFIX/lib" \
   -Wl,--gc-sections -ffunction-sections -fdata-sections \
   -Wl,--build-id=sha1 -Wl,-soname,libffmpeg_player.so \
-  -lavformat -lavcodec -lswresample -lavutil \
+  -lavfilter -lavformat -lavcodec -lswresample -lavutil \
   -llog -lm -s
 
 echo "OK: $OUT_DIR/libffmpeg_player.so"

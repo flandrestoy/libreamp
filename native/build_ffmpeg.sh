@@ -33,10 +33,12 @@ cd "$FFMPEG_SRC"
   --disable-autodetect \
   --enable-static --disable-shared --enable-pic \
   --disable-programs --disable-doc --disable-debug \
-  --disable-avdevice --disable-avfilter --disable-swscale --disable-postproc \
+  --disable-avdevice --disable-swscale --disable-postproc \
   --disable-network --disable-protocols \
   --disable-everything \
   --enable-avformat --enable-avcodec --enable-avutil --enable-swresample \
+  --enable-avfilter \
+  --enable-filter=abuffer,abuffersink,aformat,aresample,anull,superequalizer,equalizer,firequalizer,anequalizer,bass,treble,volume,crossfeed,acompressor,alimiter,dynaudnorm,loudnorm,atempo,aecho,stereotools,extrastereo,apulsator \
   --enable-decoder=mp3,mp3float,aac,aac_latm,flac,vorbis,opus,alac,wmav1,wmav2,wmapro,wmalossless,wmavoice,pcm_s16le,pcm_s16be,pcm_u8,pcm_s24le,pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f64le,pcm_alaw,pcm_mulaw \
   --enable-demuxer=mov,matroska,avi,asf,ogg,flac,mp3,wav,aiff,caf,aac \
   --enable-parser=aac,flac,mpegaudio,vorbis,opus \
@@ -46,7 +48,7 @@ cd "$FFMPEG_SRC"
 make -j2 install
 
 echo "=== Build complete. Verifying outputs ==="
-for lib in avformat avcodec avutil swresample; do
+for lib in avformat avcodec avutil swresample avfilter; do
   f="$PREFIX/lib/lib${lib}.a"
   if [ -f "$f" ]; then
     echo "OK: $f ($(du -h "$f" | cut -f1))"
