@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
 import dev.libreamp.player.databinding.ActivityMainBinding
 import dev.libreamp.player.ui.nowplaying.NowPlayingFragment
 import dev.libreamp.player.ui.playlist.PlaylistFragment
@@ -21,21 +20,6 @@ class MainActivity : AppCompatActivity() {
         binding.viewPager.adapter = object : FragmentStateAdapter(this) {
             override fun getItemCount(): Int = PAGES.size
             override fun createFragment(position: Int): Fragment = PAGES[position].invoke()
-        }
-        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                binding.bottomNav.menu.getItem(position).isChecked = true
-            }
-        })
-
-        binding.bottomNav.setOnItemSelectedListener { item ->
-            val position = when (item.itemId) {
-                R.id.nav_now_playing -> 0
-                R.id.nav_playlist -> 1
-                else -> return@setOnItemSelectedListener false
-            }
-            binding.viewPager.currentItem = position
-            true
         }
     }
 

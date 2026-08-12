@@ -22,6 +22,7 @@ data class PlaylistEntryEntity(
     val durationMs: Long,
     val manualOrderIndex: Long,
     val dateAddedMs: Long,
+    val lastModifiedMs: Long = 0L,
     val accessRevoked: Boolean = false,
     /** Path to a cached copy of the embedded cover art extracted at probe time, if any. */
     val artPath: String? = null

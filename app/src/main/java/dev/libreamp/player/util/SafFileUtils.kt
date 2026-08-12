@@ -2,6 +2,7 @@ package dev.libreamp.player.util
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import dev.libreamp.player.data.db.MediaType
 import dev.libreamp.player.data.db.PickedFile
@@ -16,6 +17,24 @@ fun queryDisplayName(context: Context, uri: Uri): String {
             if (idx >= 0 && cursor.moveToFirst()) return cursor.getString(idx)
         }
     return uri.lastPathSegment ?: uri.toString()
+}
+
+/** File's on-disk mtime: `DocumentsContract` column for SAF `content://` Uris, plain stat for `file://`. */
+fun queryLastModified(context: Context, uri: Uri): Long {
+    return when (uri.scheme) {
+        "file" -> uri.path?.let { File(it).lastModified() } ?: 0L
+        "content" -> try {
+            context.contentResolver.query(
+                uri, arrayOf(DocumentsContract.Document.COLUMN_LAST_MODIFIED), null, null, null
+            )?.use { cursor ->
+                val idx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                if (idx >= 0 && cursor.moveToFirst()) cursor.getLong(idx) else 0L
+            } ?: 0L
+        } catch (t: Throwable) {
+            0L
+        }
+        else -> 0L
+    }
 }
 
 /**
@@ -56,7 +75,8 @@ object MediaProbe {
                 artist = tags["artist"],
                 album = tags["album"],
                 durationMs = if (durationUs > 0) durationUs / 1000 else 0L,
-                artPath = artPath
+                artPath = artPath,
+                lastModifiedMs = queryLastModified(context, uri)
             )
         } finally {
             NativeBridge.nativeClose(handle)

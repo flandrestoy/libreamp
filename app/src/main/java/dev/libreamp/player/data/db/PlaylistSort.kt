@@ -1,6 +1,6 @@
 package dev.libreamp.player.data.db
 
-enum class SortKey { MANUAL, TITLE, ARTIST, ALBUM, DURATION, DATE_ADDED }
+enum class SortKey { MANUAL, TITLE, ARTIST, ALBUM, DURATION, DATE_ADDED, LAST_MODIFIED }
 
 enum class GroupKey { NONE, ARTIST, ALBUM, MEDIA_TYPE }
 
@@ -21,6 +21,7 @@ fun List<PlaylistEntryEntity>.sortedAndGrouped(
         SortKey.ALBUM -> compareBy { (it.album ?: "").lowercase() }
         SortKey.DURATION -> compareBy { it.durationMs }
         SortKey.DATE_ADDED -> compareBy { it.dateAddedMs }
+        SortKey.LAST_MODIFIED -> compareBy { it.lastModifiedMs }
     }
 
     if (group == GroupKey.NONE) {

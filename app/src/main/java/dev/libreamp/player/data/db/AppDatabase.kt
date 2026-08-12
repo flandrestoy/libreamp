@@ -15,7 +15,7 @@ class Converters {
     fun toMediaType(value: String): MediaType = MediaType.valueOf(value)
 }
 
-@Database(entities = [PlaylistEntryEntity::class], version = 2, exportSchema = false)
+@Database(entities = [PlaylistEntryEntity::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun playlistEntryDao(): PlaylistEntryDao

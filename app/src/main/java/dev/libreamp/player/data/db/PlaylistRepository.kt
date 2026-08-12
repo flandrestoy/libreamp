@@ -40,7 +40,8 @@ class PlaylistRepository(context: Context) {
                 durationMs = file.durationMs,
                 artPath = file.artPath,
                 manualOrderIndex = next.also { next += MANUAL_ORDER_STEP },
-                dateAddedMs = now
+                dateAddedMs = now,
+                lastModifiedMs = file.lastModifiedMs
             )
         }
         return dao.insertAll(entries)
@@ -103,5 +104,6 @@ data class PickedFile(
     val artist: String?,
     val album: String?,
     val durationMs: Long,
-    val artPath: String? = null
+    val artPath: String? = null,
+    val lastModifiedMs: Long = 0L
 )

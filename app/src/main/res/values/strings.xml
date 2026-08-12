@@ -1,14 +1,28 @@
 <resources>
     <string name="app_name">LibreAmp</string>
-    <string name="tab_now_playing">Now Playing</string>
     <string name="tab_playlist">Playlist</string>
     <string name="action_add_files">Add files</string>
     <string name="action_sort">Sort</string>
     <string name="action_group">Group</string>
+    <string name="action_remove_mode">Remove</string>
     <string name="action_delete">Delete</string>
     <string name="drag_disabled_grouped">Turn off grouping to reorder tracks manually</string>
     <string name="switched_to_manual_sort">Sort switched to Manual</string>
     <string name="notif_channel_playback">Playback</string>
+
+    <string name="hint_sort_by">Sort by:</string>
+    <string name="hint_group_by">Group by:</string>
+    <string name="sort_manual">Manual</string>
+    <string name="sort_title">Title</string>
+    <string name="sort_artist">Artist</string>
+    <string name="sort_album">Album</string>
+    <string name="sort_duration">Duration</string>
+    <string name="sort_date_added">Date added</string>
+    <string name="sort_last_modified">Last modified</string>
+    <string name="group_none">None</string>
+    <string name="group_artist">Artist</string>
+    <string name="group_album">Album</string>
+    <string name="group_media_type">Media type</string>
 
     <string name="file_picker_title">Select files</string>
     <string name="address_bar_hint">/storage/emulated/0</string>
