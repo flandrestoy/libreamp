@@ -2,8 +2,9 @@ package dev.libreamp.player
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.commit
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import dev.libreamp.player.databinding.ActivityMainBinding
 import dev.libreamp.player.ui.nowplaying.NowPlayingFragment
 import dev.libreamp.player.ui.playlist.PlaylistFragment
@@ -17,22 +18,31 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        if (savedInstanceState == null) {
-            showFragment(NowPlayingFragment())
+        binding.viewPager.adapter = object : FragmentStateAdapter(this) {
+            override fun getItemCount(): Int = PAGES.size
+            override fun createFragment(position: Int): Fragment = PAGES[position].invoke()
         }
+        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                binding.bottomNav.menu.getItem(position).isChecked = true
+            }
+        })
 
         binding.bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_now_playing -> { showFragment(NowPlayingFragment()); true }
-                R.id.nav_playlist -> { showFragment(PlaylistFragment()); true }
-                else -> false
+            val position = when (item.itemId) {
+                R.id.nav_now_playing -> 0
+                R.id.nav_playlist -> 1
+                else -> return@setOnItemSelectedListener false
             }
+            binding.viewPager.currentItem = position
+            true
         }
     }
 
-    private fun showFragment(fragment: androidx.fragment.app.Fragment) {
-        supportFragmentManager.commit {
-            replace(R.id.fragment_container, fragment)
-        }
+    companion object {
+        private val PAGES: List<() -> Fragment> = listOf(
+            { NowPlayingFragment() },
+            { PlaylistFragment() }
+        )
     }
 }

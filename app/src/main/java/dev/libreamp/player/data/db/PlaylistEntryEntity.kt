@@ -6,8 +6,9 @@ import androidx.room.PrimaryKey
 enum class MediaType { AUDIO, VIDEO }
 
 /**
- * A single playlist row. [contentUri] comes from Storage Access Framework
- * (ACTION_OPEN_DOCUMENT) — never MediaStore.
+ * A single playlist row. [contentUri] is either a Storage Access Framework
+ * content:// Uri or a plain file:// Uri from the in-app filesystem picker —
+ * never MediaStore.
  */
 @Entity(tableName = "playlist_entries")
 data class PlaylistEntryEntity(

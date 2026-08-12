@@ -9,4 +9,14 @@
     <string name="drag_disabled_grouped">Turn off grouping to reorder tracks manually</string>
     <string name="switched_to_manual_sort">Sort switched to Manual</string>
     <string name="notif_channel_playback">Playback</string>
+
+    <string name="file_picker_title">Select files</string>
+    <string name="address_bar_hint">/storage/emulated/0</string>
+    <string name="action_go">Go</string>
+    <string name="action_select_all">Select all</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_abort">Abort</string>
+    <string name="msg_cannot_read_dir">Can\'t open that directory</string>
+    <string name="msg_storage_permission_required">Storage access is required to browse files</string>
+    <string name="files_selected_count">%d file(s) selected</string>
 </resources>

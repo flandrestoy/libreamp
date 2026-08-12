@@ -22,10 +22,14 @@ class PlaylistRepository(context: Context) {
         var next = dao.maxManualOrderIndex() + MANUAL_ORDER_STEP
         val now = System.currentTimeMillis()
         val entries = picked.map { file ->
-            resolver.takePersistableUriPermission(
-                file.uri,
-                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
+            // SAF grants (content://) need persisting; plain filesystem paths (file://) from the
+            // in-app picker are already readable via storage permission, with nothing to persist.
+            if (file.uri.scheme == "content") {
+                resolver.takePersistableUriPermission(
+                    file.uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
             PlaylistEntryEntity(
                 contentUri = file.uri.toString(),
                 displayName = file.displayName,
@@ -75,7 +79,10 @@ class PlaylistRepository(context: Context) {
         val granted = resolver.persistedUriPermissions.map { it.uri }.toSet()
         val all = dao.getAll()
         val toUpdate = all.mapNotNull { entry ->
-            val stillGranted = entry.contentUri.toUri() in granted
+            val uri = entry.contentUri.toUri()
+            // file:// entries come from the in-app picker and aren't SAF grants, so their
+            // access is governed by the file still existing rather than a persisted permission.
+            val stillGranted = if (uri.scheme == "content") uri in granted else java.io.File(uri.path ?: "").exists()
             if (entry.accessRevoked == stillGranted) {
                 entry.copy(accessRevoked = !stillGranted)
             } else null

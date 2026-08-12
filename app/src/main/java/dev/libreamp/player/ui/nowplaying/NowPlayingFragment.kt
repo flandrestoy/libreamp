@@ -69,6 +69,9 @@ class NowPlayingFragment : Fragment() {
                     binding.buttonPlayPause.setImageResource(
                         if (state.isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
                     )
+                    binding.buttonRepeat.setImageResource(
+                        if (state.repeatMode == RepeatMode.ONE) R.drawable.ic_repeat_one else R.drawable.ic_repeat
+                    )
                     binding.buttonRepeat.alpha = if (state.repeatMode == RepeatMode.OFF) 0.4f else 1.0f
                     binding.buttonShuffle.alpha = if (state.shuffle) 1.0f else 0.4f
 

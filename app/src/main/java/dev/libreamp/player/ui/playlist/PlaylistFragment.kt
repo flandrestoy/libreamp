@@ -22,7 +22,9 @@ import dev.libreamp.player.data.db.PlaylistEntryEntity
 import dev.libreamp.player.data.db.SortKey
 import dev.libreamp.player.databinding.FragmentPlaylistBinding
 import dev.libreamp.player.playback.PlaybackService
+import dev.libreamp.player.ui.filepicker.FilePickerActivity
 import kotlinx.coroutines.launch
+import java.io.File
 
 class PlaylistFragment : Fragment() {
 
@@ -38,9 +40,13 @@ class PlaylistFragment : Fragment() {
     private var toastedManualSwitch = false
 
     private val pickFilesLauncher = registerForActivityResult(
-        ActivityResultContracts.OpenMultipleDocuments()
-    ) { uris ->
-        if (uris.isNotEmpty()) viewModel.addFiles(requireContext(), uris)
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val paths = result.data?.getStringArrayListExtra(FilePickerActivity.EXTRA_SELECTED_PATHS)
+            val uris = paths.orEmpty().map { android.net.Uri.fromFile(File(it)) }
+            if (uris.isNotEmpty()) viewModel.addFiles(requireContext(), uris)
+        }
     }
 
     override fun onCreateView(
@@ -73,7 +79,7 @@ class PlaylistFragment : Fragment() {
         binding.toolbar.setOnMenuItemClickListener { item -> onToolbarItem(item) }
 
         binding.fabAddFiles.setOnClickListener {
-            pickFilesLauncher.launch(arrayOf("audio/*", "video/*"))
+            pickFilesLauncher.launch(Intent(requireContext(), FilePickerActivity::class.java))
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
