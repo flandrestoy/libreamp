@@ -54,8 +54,9 @@ class PlaylistRepository(context: Context) {
 
     /**
      * Persists a drag-drop: [moved] is the dragged entry, now sitting between
-     * [before] and [after] in the visible (Group == NONE) list. Uses the
-     * average-of-neighbors gap strategy so only this one row is rewritten.
+     * [before] and [after] in the visible list. Uses the average-of-neighbors gap
+     * strategy so only this one row is rewritten; when the gap is exhausted (the
+     * neighbours are adjacent integers) it falls back to a full renumbering.
      */
     suspend fun applyManualMove(
         moved: PlaylistEntryEntity,
@@ -68,8 +69,39 @@ class PlaylistRepository(context: Context) {
             after == null -> before.manualOrderIndex + MANUAL_ORDER_STEP
             else -> (before.manualOrderIndex + after.manualOrderIndex) / 2
         }
+        if (before != null && newIndex <= before.manualOrderIndex ||
+            after != null && newIndex >= after.manualOrderIndex
+        ) {
+            // No room left between the neighbours: rebuild the whole order with fresh
+            // gaps, placing `moved` where the drag put it.
+            val rest = dao.getAll().filter { it.id != moved.id }.toMutableList()
+            val insertAt = when {
+                before != null -> rest.indexOfFirst { it.id == before.id } + 1
+                after != null -> rest.indexOfFirst { it.id == after.id }.coerceAtLeast(0)
+                else -> 0
+            }
+            rest.add(insertAt.coerceIn(0, rest.size), moved)
+            rewriteOrder(rest)
+            return
+        }
         dao.update(moved.copy(manualOrderIndex = newIndex))
     }
+
+    /** Renumbers [ordered] with fresh evenly-spaced indices; this *is* the new manual order. */
+    private suspend fun rewriteOrder(ordered: List<PlaylistEntryEntity>) {
+        val renumbered = ordered.mapIndexed { i, entry ->
+            entry.copy(manualOrderIndex = (i + 1) * MANUAL_ORDER_STEP)
+        }
+        if (renumbered.isNotEmpty()) dao.updateAll(renumbered)
+    }
+
+    /** One-off: reorders the stored playlist by [sort] and returns it to manual order. */
+    suspend fun applySort(sort: SortKey) = rewriteOrder(dao.getAll().orderedBy(sort))
+
+    /** One-off: re-buckets the stored playlist by [group], keeping order within a bucket. */
+    suspend fun applyGroup(group: GroupKey) = rewriteOrder(dao.getAll().groupedBy(group))
+
+    suspend fun reverseOrder() = rewriteOrder(dao.getAll().reversed())
 
     /**
      * Cross-references persisted SAF permissions against stored entries at startup;

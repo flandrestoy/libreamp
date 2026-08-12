@@ -11,7 +11,7 @@ import dev.libreamp.player.data.db.GroupKey
 import dev.libreamp.player.data.db.PlaylistEntryEntity
 import dev.libreamp.player.data.db.PlaylistRepository
 import dev.libreamp.player.data.db.SortKey
-import dev.libreamp.player.data.db.sortedAndGrouped
+import dev.libreamp.player.data.db.matchesQuery
 import dev.libreamp.player.util.MediaProbe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,20 +26,35 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
 
     private val repository = PlaylistRepository(application)
 
-    val sort = MutableStateFlow(SortKey.MANUAL)
-    val group = MutableStateFlow(GroupKey.NONE)
+    val searchQuery = MutableStateFlow("")
 
+    /**
+     * Always the stored manual order (sorting/grouping rewrite that order rather than
+     * being applied as a lens here); the only view-time transform left is the search
+     * filter.
+     */
     val visibleEntries: StateFlow<List<PlaylistEntryEntity>> =
-        combine(repository.observeAll(), sort, group) { entries, sortKey, groupKey ->
-            entries.sortedAndGrouped(sortKey, groupKey)
+        combine(repository.observeAll(), searchQuery) { entries, query ->
+            if (query.isBlank()) entries else entries.filter { it.matchesQuery(query) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch { repository.refreshAccessState() }
     }
 
-    fun setSort(key: SortKey) { sort.value = key }
-    fun setGroup(key: GroupKey) { group.value = key }
+    fun setSearchQuery(query: String) { searchQuery.value = query }
+
+    fun applySort(key: SortKey) {
+        viewModelScope.launch { repository.applySort(key) }
+    }
+
+    fun applyGroup(key: GroupKey) {
+        viewModelScope.launch { repository.applyGroup(key) }
+    }
+
+    fun reverseOrder() {
+        viewModelScope.launch { repository.reverseOrder() }
+    }
 
     fun addFiles(context: Context, uris: List<Uri>) {
         viewModelScope.launch {

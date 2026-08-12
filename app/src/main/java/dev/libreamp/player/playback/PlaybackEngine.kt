@@ -5,11 +5,14 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
+import android.media.PlaybackParams
 import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
 import androidx.core.net.toUri
 import dev.libreamp.player.data.db.PlaylistEntryEntity
+import dev.libreamp.player.data.effects.EffectsConfig
+import dev.libreamp.player.data.effects.EffectsStore
 import dev.libreamp.player.native_bridge.NativeBridge
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,8 +53,18 @@ class PlaybackEngine(context: Context) {
     @Volatile private var playing = false
     @Volatile private var pendingAutoPause = false // set by AudioFocusManager transient loss
 
+    /** Effects chain to (re)install after every open; touched on [handler] only. */
+    private var effects: EffectsConfig
+    private var duckFactor = 1f
+    private var appliedSpeed = 1f
+
     private val _state = MutableStateFlow(PlaybackState())
     val state: StateFlow<PlaybackState> = _state
+
+    init {
+        EffectsStore.init(appContext)
+        effects = EffectsStore.config.value
+    }
 
     private fun ensureAudioTrack() {
         if (audioTrack != null) return
@@ -75,6 +88,44 @@ class PlaybackEngine(context: Context) {
             .setBufferSizeInBytes(minBuf.coerceAtLeast(CHUNK_BYTES) * 4)
             .setTransferMode(AudioTrack.MODE_STREAM)
             .build()
+        appliedSpeed = 1f // a fresh track always starts at normal rate
+        applyTrackEffects()
+    }
+
+    /**
+     * Pushes the non-ffmpeg half of the chain (speed, balance, ducking) onto the
+     * AudioTrack. Speed lives here rather than in an `atempo` filter so that
+     * [bytesWrittenSinceBase] keeps measuring *source* PCM and the position estimate
+     * stays truthful at any rate.
+     */
+    @Suppress("DEPRECATION") // setStereoVolume: the only per-channel gain API there is
+    private fun applyTrackEffects() {
+        val track = audioTrack ?: return
+        val (left, right) = effects.channelGains
+        track.setStereoVolume(left * duckFactor, right * duckFactor)
+
+        val speed = effects.effectiveSpeed
+        if (speed == appliedSpeed) return
+        try {
+            track.playbackParams = PlaybackParams().setSpeed(speed)
+            appliedSpeed = speed
+        } catch (t: Throwable) {
+            // Some devices reject rates outside their resampler's range; stay where we were.
+        }
+    }
+
+    /** Installs [effects] on the open native handle, if any. Call on [handler]. */
+    private fun applyFilterGraph() {
+        if (nativeHandle == 0L) return
+        NativeBridge.nativeSetFilterGraph(nativeHandle, effects.toFilterGraph())
+    }
+
+    fun applyEffects(config: EffectsConfig) {
+        handler.post {
+            effects = config
+            applyTrackEffects()
+            applyFilterGraph()
+        }
     }
 
     fun audioSessionId(): Int = audioTrack?.audioSessionId ?: 0
@@ -102,6 +153,10 @@ class PlaybackEngine(context: Context) {
             nativeHandle = handle
             basePositionUs = 0L
             bytesWrittenSinceBase = 0L
+
+            // The graph is per-PlayerContext, so it dies with the previous handle and
+            // has to be reinstalled for every track.
+            applyFilterGraph()
 
             ensureAudioTrack()
             audioTrack?.play()
@@ -161,8 +216,12 @@ class PlaybackEngine(context: Context) {
         }
     }
 
+    /** Focus-loss ducking; folded together with the balance gains rather than replacing them. */
     fun duck(volume: Float) {
-        handler.post { audioTrack?.setVolume(volume) }
+        handler.post {
+            duckFactor = volume.coerceIn(0f, 1f)
+            applyTrackEffects()
+        }
     }
 
     fun seekTo(positionUs: Long) {

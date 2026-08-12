@@ -1,28 +1,44 @@
 <resources>
     <string name="app_name">LibreAmp</string>
     <string name="tab_playlist">Playlist</string>
+    <string name="tab_effects">Effects</string>
     <string name="action_add_files">Add files</string>
     <string name="action_sort">Sort</string>
     <string name="action_group">Group</string>
+    <string name="action_search">Search</string>
+    <string name="action_close_search">Close search</string>
     <string name="action_remove_mode">Remove</string>
     <string name="action_delete">Delete</string>
-    <string name="drag_disabled_grouped">Turn off grouping to reorder tracks manually</string>
-    <string name="switched_to_manual_sort">Sort switched to Manual</string>
+    <string name="order_updated">Playlist order updated</string>
+    <string name="search_hint">Search title, artist, album, file</string>
     <string name="notif_channel_playback">Playback</string>
 
-    <string name="hint_sort_by">Sort by:</string>
-    <string name="hint_group_by">Group by:</string>
-    <string name="sort_manual">Manual</string>
     <string name="sort_title">Title</string>
     <string name="sort_artist">Artist</string>
     <string name="sort_album">Album</string>
     <string name="sort_duration">Duration</string>
     <string name="sort_date_added">Date added</string>
     <string name="sort_last_modified">Last modified</string>
-    <string name="group_none">None</string>
+    <string name="sort_reverse">Reverse current order</string>
     <string name="group_artist">Artist</string>
     <string name="group_album">Album</string>
     <string name="group_media_type">Media type</string>
+
+    <string name="effects_enable">Enable effects</string>
+    <string name="effects_preset">Preset</string>
+    <string name="effects_equalizer">Equalizer (18 bands)</string>
+    <string name="effects_reset_eq">Reset equalizer</string>
+    <string name="effects_tone">Tone and dynamics</string>
+    <string name="effects_bass">Bass</string>
+    <string name="effects_treble">Treble</string>
+    <string name="effects_crossfeed">Crossfeed (headphones)</string>
+    <string name="effects_dynaudnorm">Dynamic normalization</string>
+    <string name="effects_output">Output</string>
+    <string name="effects_speed">Speed</string>
+    <string name="effects_balance">Balance</string>
+    <string name="effects_balance_center">Center</string>
+    <string name="effects_balance_left">L %d%%</string>
+    <string name="effects_balance_right">R %d%%</string>
 
     <string name="file_picker_title">Select files</string>
     <string name="address_bar_hint">/storage/emulated/0</string>

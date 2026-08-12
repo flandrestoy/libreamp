@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Currently-playing playlist row: colorAccent at ~20% so it reads on both themes. -->
+    <color name="now_playing_highlight">#33D0BCFF</color>
+</resources>

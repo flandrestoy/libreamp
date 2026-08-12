@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Keeps the touch ripple while letting the adapter mark the currently playing row
+  with isActivated, which selectableItemBackground alone can't express.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <item>
+        <selector>
+            <item
+                android:state_activated="true"
+                android:drawable="@color/now_playing_highlight" />
+            <item android:drawable="@android:color/transparent" />
+        </selector>
+    </item>
+</ripple>

@@ -18,17 +18,20 @@ priority order; nothing here is started unless marked otherwise.
 
 ## 1. Playlist rework
 
-- [ ] **Persist item positions.** Manual order already persists via
-      `manualOrderIndex`, but scroll position / list state does not.
-- [ ] **Make sorting and grouping one-off operations, not persistent modes.**
-      Currently `PlaylistViewModel.sort`/`group` are sticky `StateFlow`s that
-      continuously re-derive the visible list. Change so that picking a sort
-      *rewrites* `manualOrderIndex` once and then returns to manual order —
-      i.e. sort/group become actions applied to the stored order, not a lens
-      the list is permanently viewed through.
-- [ ] **Track numbers** shown per row.
-- [ ] **Draggable scrollbar** (fast-scroll thumb) on the playlist.
-- [ ] **Highlight the currently playing track** in the list.
+- [x] **Persist item positions.** Scroll position (first visible item + its
+      offset) is saved to the `playlist_ui` prefs in `PlaylistFragment.onPause`
+      and restored on the first list emission.
+- [x] **Make sorting and grouping one-off operations, not persistent modes.**
+      `SortKey`/`GroupKey` lost their MANUAL/NONE members; picking a sort or
+      group from the bottom-bar dialogs calls `PlaylistRepository.applySort` /
+      `applyGroup`, which renumber `manualOrderIndex` once. The list is now
+      *always* displayed in stored manual order. `applyManualMove` falls back to
+      a full renumber when the neighbour gap is exhausted.
+- [x] **Track numbers** shown per row (position in the list, 1-based).
+- [x] **Draggable scrollbar** — RecyclerView's built-in fast scroller
+      (`app:fastScrollEnabled` + thumb/track drawables).
+- [x] **Highlight the currently playing track** — the adapter takes a
+      `nowPlayingId` from the engine's state and sets `isActivated` on the row.
 
 ## 2. Effects menu (ffmpeg-powered)
 
@@ -41,32 +44,43 @@ exists:
 - Both must be called on the decode thread (`PlaybackEngine`'s handler), like
   every other native call.
 
-Remaining work is all Kotlin/UI:
-- [ ] **18-band equalizer** UI → build a `superequalizer=1b=..:2b=..:...:18b=..`
-      string. (`superequalizer` is exactly 18 bands, which is why it was chosen.)
-- [ ] Presets (flat/rock/jazz/bass/etc.) + persistence of the chosen curve.
-- [ ] **Playback speed** — either `atempo` in the graph (pitch-preserving) or
-      `AudioTrack.setPlaybackParams()`. Latter is simpler; former is consistent
-      across devices.
-- [ ] **Balance** — `stereotools` filter, or per-channel `AudioTrack.setVolume`.
-- [ ] Other filters already compiled in and available for free: `bass`, `treble`,
-      `crossfeed`, `acompressor`, `alimiter`, `dynaudnorm`, `loudnorm`, `aecho`,
+Kotlin/UI side is now done — see `ui/effects/EffectsFragment` (third pager page),
+`data/effects/EffectsConfig` (chain → filter string) and `EffectsStore`
+(SharedPreferences-backed, process-wide, read by `PlaybackEngine`):
+- [x] **18-band equalizer** UI → builds `superequalizer=1b=..:...:18b=..`.
+      Sliders are in dB (-12..+12); the filter takes *linear* gains (0..20,
+      1 = flat), so the config converts.
+- [x] Presets (flat/rock/pop/jazz/classical/bass/treble/vocal/loudness) +
+      persistence of the whole chain, not just the curve.
+- [x] **Playback speed** — `AudioTrack.setPlaybackParams()`, not `atempo`: byte
+      counting in `PlaybackEngine` measures *source* PCM, so an in-graph tempo
+      change would desync the position estimate.
+- [x] **Balance** — per-channel `AudioTrack.setStereoVolume`, folded together
+      with focus-loss ducking so the two don't overwrite each other.
+- [x] Other free filters exposed: `bass`, `treble`, `crossfeed`, `dynaudnorm`.
+      Still unused and available: `acompressor`, `alimiter`, `loudnorm`, `aecho`,
       `extrastereo`, `apulsator`, `firequalizer`, `anequalizer`, `equalizer`,
       `volume`.
-- [ ] Wire the effects chain so it survives track changes — the graph is
-      per-`PlayerContext`, so it must be re-applied in `PlaybackEngine.play()`
-      after each `nativeOpen`.
+- [x] Wire the effects chain so it survives track changes — `PlaybackEngine.play()`
+      reinstalls the graph after each `nativeOpen`.
+
+Note: graph edits go through `nativeSetFilterGraph` (debounced 120 ms), not
+`nativeSendFilterCommand` — `superequalizer` exposes no runtime commands. The
+command path is still the right one if a `bass`/`treble`/`volume`-only fast path
+is ever wanted.
 
 ## 3. Full-text search
 
-- [ ] Search across title/artist/album/filename. No search exists anywhere in
-      the app today. Simplest version: a filter step in the `combine()` in
-      `PlaylistViewModel`; consider Room FTS if it gets slow.
+- [x] Search across title/artist/album/filename — search box in the playlist
+      bottom bar, all query terms must match, filtered in the `combine()` in
+      `PlaylistViewModel`. Consider Room FTS if it ever gets slow. Drag-reorder
+      is disabled while a query is active (visible neighbours aren't the real
+      ones).
 
 ## 4. Post-search list centering
 
-- [ ] On exiting search, scroll the list so the **currently playing track is
-      centered**, rather than restoring the pre-search scroll offset.
+- [x] On exiting search the list scrolls so the currently playing track is
+      centered (`PlaylistFragment.consumeCenterRequest`).
 
 ## Backlog (from the AIMP feature comparison, not yet prioritized)
 
@@ -90,5 +104,5 @@ Remaining work is all Kotlin/UI:
   ffmpeg build has no APE/MIDI decoder and no FLV/MPEGTS demuxer — those files
   can be added to the playlist and then fail at playback. Either drop them from
   the filter or enable the corresponding decoders/demuxers.
-- Sort/group selection is not persisted across process death (in-memory
-  `MutableStateFlow`). May become moot once item 1 makes them one-off actions.
+- ~~Sort/group selection is not persisted across process death~~ — moot: they
+  are one-off rewrites of the stored order now, so there is no selection to keep.

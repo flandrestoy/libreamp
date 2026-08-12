@@ -30,6 +30,14 @@ class PlaylistAdapter(
             notifyDataSetChanged()
         }
 
+    /** Row to highlight; set from the engine's state, so guard against redundant redraws. */
+    var nowPlayingId: Long? = null
+        set(value) {
+            if (field == value) return
+            field = value
+            notifyDataSetChanged()
+        }
+
     fun submitList(newItems: List<PlaylistEntryEntity>) {
         items = newItems
         notifyDataSetChanged()
@@ -60,6 +68,8 @@ class PlaylistAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val entry = items[position]
         val b = holder.binding
+        b.textTrackNumber.text = (position + 1).toString()
+        b.root.isActivated = entry.id == nowPlayingId
         b.textTitle.text = entry.title ?: entry.displayName
         val subtitleParts = listOfNotNull(entry.artist, entry.album).filter { it.isNotBlank() }
         b.textSubtitle.text = subtitleParts.joinToString(" • ")

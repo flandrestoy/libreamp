@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import dev.libreamp.player.databinding.ActivityMainBinding
+import dev.libreamp.player.ui.effects.EffectsFragment
 import dev.libreamp.player.ui.nowplaying.NowPlayingFragment
 import dev.libreamp.player.ui.playlist.PlaylistFragment
 
@@ -26,7 +27,8 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private val PAGES: List<() -> Fragment> = listOf(
             { NowPlayingFragment() },
-            { PlaylistFragment() }
+            { PlaylistFragment() },
+            { EffectsFragment() }
         )
     }
 }
