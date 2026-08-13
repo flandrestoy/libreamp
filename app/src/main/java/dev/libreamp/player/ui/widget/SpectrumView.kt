@@ -56,7 +56,7 @@ class SpectrumView @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        advance()
+        val moving = advance()
 
         val plotHeight = height - rule - BAR_INSET_DP * density
         val count = levels.size
@@ -71,24 +71,42 @@ class SpectrumView @JvmOverloads constructor(
         }
         canvas.drawRect(0f, height - rule, width.toFloat(), height.toFloat(), rulePaint)
 
-        if (isAttachedToWindow) postInvalidateOnAnimation()
+        // Once the engine has stopped answering and every bar has fallen to the
+        // floor there is nothing left to animate, so stop asking for frames
+        // rather than redrawing a static row of nothing forever. Playback
+        // starting again re-arms this through [resume].
+        if (moving && isAttachedToWindow) postInvalidateOnAnimation() else lastFrameNanos = 0L
     }
 
     /**
      * Instant attack, timed decay: a bar jumps straight to a new peak but eases
      * back, which is what makes transients legible instead of a blur.
+     *
+     * Returns whether anything is still in motion.
      */
-    private fun advance() {
+    private fun advance(): Boolean {
         val now = System.nanoTime()
         val dt = if (lastFrameNanos == 0L) 0f else (now - lastFrameNanos) / 1_000_000_000f
         lastFrameNanos = now
 
         val live = provider?.invoke(bands) ?: false
         val fall = (DECAY_PER_SECOND * dt).coerceAtMost(1f)
+        var active = false
         for (i in levels.indices) {
             val target = if (live) bands[i] else 0f
             levels[i] = if (target >= levels[i]) target else (levels[i] - fall).coerceAtLeast(target)
+            if (levels[i] > 0f) active = true
         }
+        return live || active
+    }
+
+    /**
+     * Restarts the frame loop after it idled out. The view cannot observe
+     * playback itself, so whoever owns the provider has to say when there is
+     * something to show again.
+     */
+    fun resume() {
+        if (isAttachedToWindow) postInvalidateOnAnimation()
     }
 
     private companion object {

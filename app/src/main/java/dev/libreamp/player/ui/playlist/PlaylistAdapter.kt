@@ -1,6 +1,5 @@
 package dev.libreamp.player.ui.playlist
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.LruCache
@@ -140,8 +139,16 @@ class PlaylistAdapter(
     class HeaderHolder(val binding: ItemPlaylistHeaderBinding) :
         RecyclerView.ViewHolder(binding.root)
 
+    /**
+     * Each holder owns its placeholder. One shared instance across rows would
+     * be smaller, but an ImageView takes ownership of its drawable's callback
+     * and bounds, so the last row bound would quietly become the only one the
+     * drawable could invalidate.
+     */
     class TrackHolder(val binding: ItemPlaylistEntryBinding) :
-        RecyclerView.ViewHolder(binding.root)
+        RecyclerView.ViewHolder(binding.root) {
+        val placeholder = HatchDrawable(binding.root.context.applicationContext, small = true)
+    }
 
     override fun getItemViewType(position: Int): Int =
         if (rows[position] is Row.Header) TYPE_HEADER else TYPE_TRACK
@@ -179,7 +186,7 @@ class PlaylistAdapter(
         b.textTrackNumber.isActivated = entry.id == nowPlayingId
         b.textTitle.isActivated = entry.id == nowPlayingId
 
-        bindArt(b, entry)
+        bindArt(holder, entry)
 
         b.checkboxSelect.visibility = if (multiSelectMode) View.VISIBLE else View.GONE
         b.checkboxSelect.setOnCheckedChangeListener(null)
@@ -205,10 +212,10 @@ class PlaylistAdapter(
         }
     }
 
-    private fun bindArt(b: ItemPlaylistEntryBinding, entry: PlaylistEntryEntity) {
+    private fun bindArt(holder: TrackHolder, entry: PlaylistEntryEntity) {
         val art = entry.artPath?.let { loadArt(it) }
-        if (art != null) b.imageArt.setImageBitmap(art)
-        else b.imageArt.setImageDrawable(placeholderFor(b.root.context))
+        if (art != null) holder.binding.imageArt.setImageBitmap(art)
+        else holder.binding.imageArt.setImageDrawable(holder.placeholder)
     }
 
     private fun setSelected(entry: PlaylistEntryEntity, checked: Boolean) {
@@ -217,12 +224,6 @@ class PlaylistAdapter(
     }
 
     override fun getItemCount(): Int = rows.size
-
-    private var placeholder: HatchDrawable? = null
-
-    /** One shared instance: it is stateless and every thumbnail draws it the same. */
-    private fun placeholderFor(context: Context): HatchDrawable =
-        placeholder ?: HatchDrawable(context.applicationContext, small = true).also { placeholder = it }
 
     private fun loadArt(path: String): Bitmap? {
         artCache.get(path)?.let { return it }

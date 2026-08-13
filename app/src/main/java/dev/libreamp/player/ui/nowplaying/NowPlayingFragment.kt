@@ -93,6 +93,9 @@ class NowPlayingFragment : Fragment() {
                     binding.textRepeatBadge.text =
                         if (state.repeatMode == RepeatMode.ONE) getString(R.string.repeat_one_badge) else ""
                     binding.buttonShuffle.isActivated = state.shuffle
+                    // The spectrum's frame loop idles out when the bars settle;
+                    // playback resuming is the signal to start it again.
+                    if (state.isPlaying) binding.spectrum.resume()
 
                     bindArt(entry?.artPath)
 
