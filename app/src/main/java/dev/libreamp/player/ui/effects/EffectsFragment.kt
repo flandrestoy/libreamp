@@ -9,7 +9,6 @@ import android.widget.ArrayAdapter
 import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import dev.libreamp.player.R
-import dev.libreamp.player.data.effects.BASS_TREBLE_MAX_DB
 import dev.libreamp.player.data.effects.EQ_BAND_COUNT
 import dev.libreamp.player.data.effects.EQ_FREQUENCIES
 import dev.libreamp.player.data.effects.EQ_MAX_DB
@@ -94,16 +93,6 @@ class EffectsFragment : Fragment() {
             push()
         }
 
-        binding.seekBass.setOnSeekBarChangeListener(onSeek { progress ->
-            val db = progress - BASS_TREBLE_MAX_DB
-            binding.textBassValue.text = formatDb(db)
-            config = config.copy(bassDb = db)
-        })
-        binding.seekTreble.setOnSeekBarChangeListener(onSeek { progress ->
-            val db = progress - BASS_TREBLE_MAX_DB
-            binding.textTrebleValue.text = formatDb(db)
-            config = config.copy(trebleDb = db)
-        })
         binding.seekSpeed.setOnSeekBarChangeListener(onSeek { progress ->
             val speed = speedOf(progress)
             binding.textSpeedValue.text = String.format(Locale.US, "%.2fx", speed)
@@ -125,6 +114,41 @@ class EffectsFragment : Fragment() {
             config = config.copy(dynaudnorm = checked)
             push()
         }
+        binding.switchCompressor.setOnCheckedChangeListener { _, checked ->
+            if (updatingUi) return@setOnCheckedChangeListener
+            config = config.copy(compressor = checked)
+            push()
+        }
+        binding.switchLimiter.setOnCheckedChangeListener { _, checked ->
+            if (updatingUi) return@setOnCheckedChangeListener
+            config = config.copy(limiter = checked)
+            push()
+        }
+        binding.switchLoudnorm.setOnCheckedChangeListener { _, checked ->
+            if (updatingUi) return@setOnCheckedChangeListener
+            config = config.copy(loudnorm = checked)
+            push()
+        }
+        binding.switchEcho.setOnCheckedChangeListener { _, checked ->
+            if (updatingUi) return@setOnCheckedChangeListener
+            config = config.copy(echo = checked)
+            push()
+        }
+        binding.switchStereoTools.setOnCheckedChangeListener { _, checked ->
+            if (updatingUi) return@setOnCheckedChangeListener
+            config = config.copy(stereoTools = checked)
+            push()
+        }
+        binding.switchExtraStereo.setOnCheckedChangeListener { _, checked ->
+            if (updatingUi) return@setOnCheckedChangeListener
+            config = config.copy(extraStereo = checked)
+            push()
+        }
+        binding.switchPulsator.setOnCheckedChangeListener { _, checked ->
+            if (updatingUi) return@setOnCheckedChangeListener
+            config = config.copy(pulsator = checked)
+            push()
+        }
 
         bindAll()
     }
@@ -134,11 +158,14 @@ class EffectsFragment : Fragment() {
         binding.switchEnabled.isChecked = config.enabled
         binding.switchCrossfeed.isChecked = config.crossfeed
         binding.switchDynaudnorm.isChecked = config.dynaudnorm
+        binding.switchCompressor.isChecked = config.compressor
+        binding.switchLimiter.isChecked = config.limiter
+        binding.switchLoudnorm.isChecked = config.loudnorm
+        binding.switchEcho.isChecked = config.echo
+        binding.switchStereoTools.isChecked = config.stereoTools
+        binding.switchExtraStereo.isChecked = config.extraStereo
+        binding.switchPulsator.isChecked = config.pulsator
 
-        binding.seekBass.progress = (config.bassDb + BASS_TREBLE_MAX_DB).roundToInt()
-        binding.textBassValue.text = formatDb(config.bassDb)
-        binding.seekTreble.progress = (config.trebleDb + BASS_TREBLE_MAX_DB).roundToInt()
-        binding.textTrebleValue.text = formatDb(config.trebleDb)
         binding.seekSpeed.progress = ((config.speed - MIN_SPEED) * SPEED_STEPS_PER_UNIT).roundToInt()
         binding.textSpeedValue.text = String.format(Locale.US, "%.2fx", config.speed)
         binding.seekBalance.progress = ((config.balance + 1f) * BALANCE_HALF_RANGE).roundToInt()

@@ -1,7 +1,6 @@
 package dev.libreamp.player.data.effects
 
 import java.util.Locale
-import kotlin.math.abs
 
 /** The 18 fixed centre frequencies the eq UI exposes, one `anequalizer` band each. */
 val EQ_FREQUENCIES = intArrayOf(
@@ -11,7 +10,6 @@ val EQ_FREQUENCIES = intArrayOf(
 
 const val EQ_BAND_COUNT = 18
 const val EQ_MAX_DB = 12f
-const val BASS_TREBLE_MAX_DB = 20f
 const val MIN_SPEED = 0.25f
 const val MAX_SPEED = 2.0f
 
@@ -22,6 +20,13 @@ const val MAX_SPEED = 2.0f
  * graph, which is audible as a click on every rebuild.
  */
 const val EQ_FILTER_INSTANCE = "eq"
+
+/**
+ * The name `avfilter_graph_send_command` actually matches against: `graphparser.c`
+ * names an instantiated filter `<filter-type>@<instance>`, not the bare instance
+ * name, so live commands must target this, not [EQ_FILTER_INSTANCE] alone.
+ */
+const val EQ_FILTER_TARGET = "anequalizer@$EQ_FILTER_INSTANCE"
 
 /**
  * Bandwidth (Hz) `anequalizer` gets for a band centred at [freqHz]. Used both when
@@ -44,10 +49,15 @@ data class EffectsConfig(
     val enabled: Boolean = false,
     val bandsDb: List<Float> = List(EQ_BAND_COUNT) { 0f },
     val preset: String = EqPresets.FLAT,
-    val bassDb: Float = 0f,
-    val trebleDb: Float = 0f,
     val crossfeed: Boolean = false,
     val dynaudnorm: Boolean = false,
+    val compressor: Boolean = false,
+    val limiter: Boolean = false,
+    val loudnorm: Boolean = false,
+    val echo: Boolean = false,
+    val stereoTools: Boolean = false,
+    val extraStereo: Boolean = false,
+    val pulsator: Boolean = false,
     val speed: Float = 1f,
     val balance: Float = 0f
 ) {
@@ -78,10 +88,15 @@ data class EffectsConfig(
         // Always present, even flat: PlaybackEngine.applyEqBand needs the stage to
         // already exist in the running graph to live-update it band by band.
         parts += eqFilterGraphPart()
-        if (abs(bassDb) >= DB_EPSILON) parts += String.format(Locale.US, "bass=g=%.1f", bassDb)
-        if (abs(trebleDb) >= DB_EPSILON) parts += String.format(Locale.US, "treble=g=%.1f", trebleDb)
         if (crossfeed) parts += "crossfeed"
         if (dynaudnorm) parts += "dynaudnorm"
+        if (compressor) parts += "acompressor"
+        if (limiter) parts += "alimiter"
+        if (loudnorm) parts += "loudnorm"
+        if (echo) parts += "aecho"
+        if (stereoTools) parts += "stereotools"
+        if (extraStereo) parts += "extrastereo"
+        if (pulsator) parts += "apulsator"
 
         return parts.joinToString(",")
     }
@@ -101,7 +116,6 @@ data class EffectsConfig(
     }
 
     private companion object {
-        const val DB_EPSILON = 0.05f
         const val OUT_CHANNELS = 2
     }
 }

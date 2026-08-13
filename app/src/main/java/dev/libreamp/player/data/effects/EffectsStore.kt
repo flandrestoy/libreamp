@@ -17,10 +17,15 @@ object EffectsStore {
     private const val KEY_ENABLED = "enabled"
     private const val KEY_BANDS = "bands_db"
     private const val KEY_PRESET = "preset"
-    private const val KEY_BASS = "bass_db"
-    private const val KEY_TREBLE = "treble_db"
     private const val KEY_CROSSFEED = "crossfeed"
     private const val KEY_DYNAUDNORM = "dynaudnorm"
+    private const val KEY_COMPRESSOR = "compressor"
+    private const val KEY_LIMITER = "limiter"
+    private const val KEY_LOUDNORM = "loudnorm"
+    private const val KEY_ECHO = "echo"
+    private const val KEY_STEREO_TOOLS = "stereo_tools"
+    private const val KEY_EXTRA_STEREO = "extra_stereo"
+    private const val KEY_PULSATOR = "pulsator"
     private const val KEY_SPEED = "speed"
     private const val KEY_BALANCE = "balance"
 
@@ -57,10 +62,15 @@ object EffectsStore {
             enabled = p.getBoolean(KEY_ENABLED, defaults.enabled),
             bandsDb = bands,
             preset = p.getString(KEY_PRESET, defaults.preset) ?: defaults.preset,
-            bassDb = p.getFloat(KEY_BASS, defaults.bassDb),
-            trebleDb = p.getFloat(KEY_TREBLE, defaults.trebleDb),
             crossfeed = p.getBoolean(KEY_CROSSFEED, defaults.crossfeed),
             dynaudnorm = p.getBoolean(KEY_DYNAUDNORM, defaults.dynaudnorm),
+            compressor = p.getBoolean(KEY_COMPRESSOR, defaults.compressor),
+            limiter = p.getBoolean(KEY_LIMITER, defaults.limiter),
+            loudnorm = p.getBoolean(KEY_LOUDNORM, defaults.loudnorm),
+            echo = p.getBoolean(KEY_ECHO, defaults.echo),
+            stereoTools = p.getBoolean(KEY_STEREO_TOOLS, defaults.stereoTools),
+            extraStereo = p.getBoolean(KEY_EXTRA_STEREO, defaults.extraStereo),
+            pulsator = p.getBoolean(KEY_PULSATOR, defaults.pulsator),
             speed = p.getFloat(KEY_SPEED, defaults.speed),
             balance = p.getFloat(KEY_BALANCE, defaults.balance)
         )
@@ -71,10 +81,15 @@ object EffectsStore {
             .putBoolean(KEY_ENABLED, c.enabled)
             .putString(KEY_BANDS, c.bandsDb.joinToString(","))
             .putString(KEY_PRESET, c.preset)
-            .putFloat(KEY_BASS, c.bassDb)
-            .putFloat(KEY_TREBLE, c.trebleDb)
             .putBoolean(KEY_CROSSFEED, c.crossfeed)
             .putBoolean(KEY_DYNAUDNORM, c.dynaudnorm)
+            .putBoolean(KEY_COMPRESSOR, c.compressor)
+            .putBoolean(KEY_LIMITER, c.limiter)
+            .putBoolean(KEY_LOUDNORM, c.loudnorm)
+            .putBoolean(KEY_ECHO, c.echo)
+            .putBoolean(KEY_STEREO_TOOLS, c.stereoTools)
+            .putBoolean(KEY_EXTRA_STEREO, c.extraStereo)
+            .putBoolean(KEY_PULSATOR, c.pulsator)
             .putFloat(KEY_SPEED, c.speed)
             .putFloat(KEY_BALANCE, c.balance)
             .apply()

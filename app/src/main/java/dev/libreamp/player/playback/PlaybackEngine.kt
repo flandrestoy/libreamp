@@ -12,7 +12,7 @@ import android.os.HandlerThread
 import androidx.core.net.toUri
 import dev.libreamp.player.data.db.PlaylistEntryEntity
 import dev.libreamp.player.data.effects.EQ_BAND_COUNT
-import dev.libreamp.player.data.effects.EQ_FILTER_INSTANCE
+import dev.libreamp.player.data.effects.EQ_FILTER_TARGET
 import dev.libreamp.player.data.effects.EQ_FREQUENCIES
 import dev.libreamp.player.data.effects.EffectsConfig
 import dev.libreamp.player.data.effects.EffectsStore
@@ -159,7 +159,7 @@ class PlaybackEngine(context: Context) {
                 val arg = String.format(
                     Locale.US, "%d|f=%d|w=%.1f|g=%.2f", filterIndex, freq, width, db
                 )
-                NativeBridge.nativeSendFilterCommand(nativeHandle, EQ_FILTER_INSTANCE, "change", arg)
+                NativeBridge.nativeSendFilterCommand(nativeHandle, EQ_FILTER_TARGET, "change", arg)
             }
         }
     }

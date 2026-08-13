@@ -84,62 +84,8 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/effects_tone"
+                android:text="@string/effects_dynamics"
                 android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="72dp"
-                    android:layout_height="wrap_content"
-                    android:text="@string/effects_bass"
-                    android:textSize="13sp" />
-
-                <SeekBar
-                    android:id="@+id/seek_bass"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="40" />
-
-                <TextView
-                    android:id="@+id/text_bass_value"
-                    android:layout_width="52dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="72dp"
-                    android:layout_height="wrap_content"
-                    android:text="@string/effects_treble"
-                    android:textSize="13sp" />
-
-                <SeekBar
-                    android:id="@+id/seek_treble"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="40" />
-
-                <TextView
-                    android:id="@+id/text_treble_value"
-                    android:layout_width="52dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:textSize="12sp" />
-            </LinearLayout>
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_crossfeed"
@@ -156,6 +102,62 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:text="@string/effects_dynaudnorm" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_compressor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_compressor" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_limiter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_limiter" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_loudnorm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_loudnorm" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_echo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_echo" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_stereo_tools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_stereo_tools" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_extra_stereo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_extra_stereo" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_pulsator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_pulsator" />
 
             <View
                 android:layout_width="match_parent"
