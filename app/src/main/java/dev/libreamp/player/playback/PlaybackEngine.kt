@@ -166,8 +166,22 @@ class PlaybackEngine(context: Context) {
 
     fun audioSessionId(): Int = audioTrack?.audioSessionId ?: 0
 
-    fun play(entry: PlaylistEntryEntity) {
+    /**
+     * [flushBuffered] discards whatever of the previous track is still sitting in the
+     * AudioTrack's buffer. Right for a track the user picked - they want it *now*, not
+     * after the ~370ms already queued - and wrong for an auto-advance, where that
+     * buffer is the tail of the track that just finished decoding and has yet to be
+     * heard.
+     */
+    fun play(entry: PlaylistEntryEntity, flushBuffered: Boolean = true) {
         handler.post {
+            // Before anything else: whatever the user asked for, the old track stops
+            // being decoded here, not one chunk from now.
+            handler.removeCallbacks(decodeLoop)
+            if (flushBuffered) {
+                audioTrack?.pause()
+                audioTrack?.flush() // also resets getPlaybackHeadPosition() to 0
+            }
             closeCurrentLocked()
             val pfd = try {
                 resolver.openFileDescriptor(entry.contentUri.toUri(), "r")
@@ -204,7 +218,7 @@ class PlaybackEngine(context: Context) {
                 durationUs = NativeBridge.nativeGetDurationUs(handle),
                 error = null
             )
-            handler.post(decodeLoop)
+            restartDecodeLoop()
         }
     }
 
@@ -224,7 +238,7 @@ class PlaybackEngine(context: Context) {
             playing = true
             audioTrack?.play()
             _state.value = _state.value.copy(isPlaying = true)
-            handler.post(decodeLoop)
+            restartDecodeLoop()
         }
     }
 
@@ -247,7 +261,7 @@ class PlaybackEngine(context: Context) {
                 playing = true
                 audioTrack?.play()
                 _state.value = _state.value.copy(isPlaying = true)
-                handler.post(decodeLoop)
+                restartDecodeLoop()
             }
         }
     }
@@ -273,7 +287,7 @@ class PlaybackEngine(context: Context) {
             }
             if (wasPlaying) {
                 audioTrack?.play()
-                handler.post(decodeLoop)
+                restartDecodeLoop()
             }
             _state.value = _state.value.copy(positionUs = currentPositionUs())
         }
@@ -325,6 +339,23 @@ class PlaybackEngine(context: Context) {
             NativeBridge.nativeClose(nativeHandle)
             nativeHandle = 0L
         }
+    }
+
+    /**
+     * Posts a decode-loop iteration, dropping any already queued.
+     *
+     * [decodeLoop] reposts itself, so a copy left in the queue is not a stray message
+     * but a whole second chain cycling forever - and the same Runnable can sit in the
+     * queue any number of times. Each copy holds the decode thread for one blocking
+     * [AudioTrack.write] (~93ms at [CHUNK_BYTES]/44.1kHz), and work posted afterwards
+     * queues behind all of them, so chains accumulated over a run of track switches
+     * turn into a lag between picking a track and hearing it that grows by ~93ms each
+     * time. Call on [handler], which is also the only thread [decodeLoop] runs on, so
+     * there is never an iteration in flight to race with the removal.
+     */
+    private fun restartDecodeLoop() {
+        handler.removeCallbacks(decodeLoop)
+        handler.post(decodeLoop)
     }
 
     private val decodeLoop = object : Runnable {

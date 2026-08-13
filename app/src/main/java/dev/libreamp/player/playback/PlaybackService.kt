@@ -57,7 +57,7 @@ class PlaybackService : Service() {
             override fun onTrackCompleted() {
                 val state = engine.state.value
                 if (state.repeatMode == RepeatMode.ONE) {
-                    state.entry?.let { engine.play(it) }
+                    state.entry?.let { engine.play(it, flushBuffered = false) }
                 } else {
                     skipNext(autoAdvance = true)
                 }
@@ -122,9 +122,14 @@ class PlaybackService : Service() {
         }
     }
 
-    private fun startPlayback(entry: PlaylistEntryEntity) {
+    /**
+     * [flushBuffered] false only for an auto-advance: there the audio still buffered is
+     * the tail of the track that just finished and has to be heard, whereas a track the
+     * user picked should cut straight over it.
+     */
+    private fun startPlayback(entry: PlaylistEntryEntity, flushBuffered: Boolean = true) {
         if (!focusManager.requestFocus()) return
-        engine.play(entry)
+        engine.play(entry, flushBuffered)
     }
 
     private fun skipNext(autoAdvance: Boolean = false) {
@@ -141,7 +146,7 @@ class PlaybackService : Service() {
         } else {
             currentQueuePos++
         }
-        startPlayback(traversalEntryAt(currentQueuePos))
+        startPlayback(traversalEntryAt(currentQueuePos), flushBuffered = !autoAdvance)
     }
 
     private fun skipPrevious() {
