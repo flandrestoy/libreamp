@@ -46,7 +46,10 @@ class FilePickerActivity : AppCompatActivity() {
         binding = ActivityFilePickerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(binding.toolbar)
+        binding.btnBack.setOnClickListener {
+            setResult(RESULT_CANCELED)
+            finish()
+        }
 
         adapter = FileBrowserAdapter(
             onNavigate = { entry -> navigateTo(entry.target) },
@@ -132,8 +135,10 @@ class FilePickerActivity : AppCompatActivity() {
 
         val entries = mutableListOf<FsEntry>()
         dir.parentFile?.let { parent -> entries.add(FsEntry("..", parent, FsEntryKind.PARENT)) }
+        // Directories carry no detail: counting their contents would mean
+        // listing every subdirectory on the main thread just to fill a label.
         directories.forEach { entries.add(FsEntry(it.name, it, FsEntryKind.DIRECTORY)) }
-        files.forEach { entries.add(FsEntry(it.name, it, FsEntryKind.FILE)) }
+        files.forEach { entries.add(FsEntry(it.name, it, FsEntryKind.FILE, formatSize(it.length()))) }
 
         adapter.submitList(entries)
         updateSelectionCount()
@@ -176,6 +181,18 @@ class FilePickerActivity : AppCompatActivity() {
 
     private fun updateSelectionCount() {
         binding.textSelectionCount.text = getString(R.string.files_selected_count, selectedPaths.size)
+    }
+
+    private fun formatSize(bytes: Long): String {
+        if (bytes < 1024) return "$bytes B"
+        val units = arrayOf("KB", "MB", "GB")
+        var value = bytes / 1024.0
+        var unit = 0
+        while (value >= 1024 && unit < units.lastIndex) {
+            value /= 1024.0
+            unit++
+        }
+        return String.format(java.util.Locale.US, "%.1f %s", value, units[unit])
     }
 
     companion object {

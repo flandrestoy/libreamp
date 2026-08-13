@@ -1,117 +1,298 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  Top-down chain: header, cover, spectrum, titles, seek. The transport row is
+  pinned to the bottom instead of following the chain, so the play button sits
+  in the same place on every device rather than floating up under a short
+  track's metadata.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center_horizontal"
-    android:padding="24dp">
+    android:background="@color/surface">
+
+    <!-- ==== Header: page indicator, label, effects ==== -->
+
+    <View
+        android:id="@+id/indicator_now"
+        android:layout_width="16dp"
+        android:layout_height="3dp"
+        android:layout_marginStart="@dimen/gutter"
+        android:background="@color/accent"
+        app:layout_constraintBottom_toBottomOf="@id/button_effects"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/button_effects" />
+
+    <View
+        android:id="@+id/indicator_playlist"
+        android:layout_width="7dp"
+        android:layout_height="3dp"
+        android:layout_marginStart="6dp"
+        android:background="@color/border_control"
+        app:layout_constraintBottom_toBottomOf="@id/indicator_now"
+        app:layout_constraintStart_toEndOf="@id/indicator_now"
+        app:layout_constraintTop_toTopOf="@id/indicator_now" />
+
+    <TextView
+        android:id="@+id/text_eyebrow"
+        style="@style/Text.Mono.Eyebrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/now_playing_eyebrow"
+        android:textColor="@color/text_secondary"
+        app:layout_constraintBottom_toBottomOf="@id/indicator_now"
+        app:layout_constraintStart_toEndOf="@id/indicator_playlist"
+        app:layout_constraintTop_toTopOf="@id/indicator_now" />
+
+    <ImageView
+        android:id="@+id/button_effects"
+        android:layout_width="40dp"
+        android:layout_height="34dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="14dp"
+        android:background="@drawable/bg_transport_button"
+        android:contentDescription="@string/action_open_effects"
+        android:scaleType="center"
+        android:src="@drawable/ic_effects"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- ==== Cover ==== -->
 
     <FrameLayout
-        android:layout_width="match_parent"
+        android:id="@+id/frame_album_art"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="24dp">
+        android:layout_marginStart="@dimen/gutter"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="@dimen/gutter"
+        android:background="@drawable/bg_art_frame"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_effects">
 
         <ImageView
             android:id="@+id/image_album_art"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_placeholder_album_art" />
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:id="@+id/text_no_cover"
+            style="@style/Text.Mono.Meta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="8dp"
+            android:letterSpacing="0.08"
+            android:text="@string/now_playing_no_cover"
+            android:textColor="@color/text_disabled"
+            android:textSize="@dimen/text_chip" />
     </FrameLayout>
+
+    <!-- ==== Spectrum ==== -->
+
+    <dev.libreamp.player.ui.widget.SpectrumView
+        android:id="@+id/spectrum"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/spectrum_height"
+        android:layout_marginStart="@dimen/gutter"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="@dimen/gutter"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frame_album_art" />
+
+    <!-- ==== Track identity ==== -->
 
     <TextView
         android:id="@+id/text_title"
-        android:layout_width="match_parent"
+        style="@style/Text.TrackTitle"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:text="@string/app_name" />
+        android:layout_marginStart="@dimen/gutter"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="@dimen/gutter"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/spectrum"
+        tools:text="Ashen Fields" />
 
     <TextView
         android:id="@+id/text_subtitle"
-        android:layout_width="match_parent"
+        style="@style/Text.TrackSubtitle"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textSize="15sp"
-        android:gravity="center"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginStart="@dimen/gutter"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="@dimen/gutter"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_title"
+        tools:text="Kōji Nagata — Slow Light" />
+
+    <LinearLayout
+        android:id="@+id/row_chips"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/gutter"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_subtitle">
+
+        <TextView
+            android:id="@+id/text_format"
+            style="@style/Text.Mono.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chip_accent"
+            android:textColor="@color/accent"
+            tools:text="FLAC" />
+
+        <TextView
+            android:id="@+id/text_rate"
+            style="@style/Text.Mono.Chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_chip_neutral"
+            tools:text="44.1 kHz · 16 bit" />
+    </LinearLayout>
+
+    <!-- ==== Seek ==== -->
 
     <SeekBar
         android:id="@+id/seek_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/text_position"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="0:00" />
-
-        <TextView
-            android:id="@+id/text_duration"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0:00" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/gutter"
         android:layout_marginTop="16dp"
+        android:layout_marginEnd="@dimen/gutter"
+        android:maxHeight="@dimen/seek_track_height"
+        android:minHeight="@dimen/seek_track_height"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:progressDrawable="@drawable/seek_track"
+        android:splitTrack="false"
+        android:thumb="@drawable/seek_thumb"
+        android:thumbOffset="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/row_chips" />
+
+    <TextView
+        android:id="@+id/text_position"
+        style="@style/Text.Mono.Time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/gutter"
+        android:layout_marginTop="2dp"
+        android:text="0:00"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/seek_bar" />
+
+    <TextView
+        android:id="@+id/text_duration"
+        style="@style/Text.Mono.Time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="@dimen/gutter"
+        android:text="0:00"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/seek_bar" />
+
+    <!-- ==== Transport ==== -->
+
+    <LinearLayout
+        android:id="@+id/row_transport"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="26dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:gravity="center">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-        <ImageButton
+        <ImageView
             android:id="@+id/button_shuffle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_rotate" />
+            android:layout_width="@dimen/transport_button_small"
+            android:layout_height="@dimen/transport_button_small"
+            android:background="@drawable/bg_transport_button"
+            android:contentDescription="@string/action_shuffle"
+            android:scaleType="center"
+            android:src="@drawable/ic_shuffle"
+            app:tint="@color/transport_icon_tint" />
 
-        <ImageButton
+        <ImageView
             android:id="@+id/button_prev"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="@dimen/transport_button"
+            android:layout_height="@dimen/transport_button"
             android:layout_marginStart="12dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_media_previous" />
+            android:background="@drawable/bg_transport_button"
+            android:contentDescription="@string/action_prev"
+            android:scaleType="center"
+            android:src="@drawable/ic_prev" />
 
-        <ImageButton
+        <ImageView
             android:id="@+id/button_play_pause"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="@dimen/transport_button_play"
+            android:layout_height="@dimen/transport_button_play"
             android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_media_play" />
+            android:background="@drawable/bg_play_button"
+            android:contentDescription="@string/action_play"
+            android:elevation="6dp"
+            android:scaleType="center"
+            android:src="@drawable/ic_play" />
 
-        <ImageButton
+        <ImageView
             android:id="@+id/button_next"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_media_next" />
-
-        <ImageButton
-            android:id="@+id/button_repeat"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/transport_button"
+            android:layout_height="@dimen/transport_button"
             android:layout_marginStart="12dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_repeat" />
+            android:background="@drawable/bg_transport_button"
+            android:contentDescription="@string/action_next"
+            android:scaleType="center"
+            android:src="@drawable/ic_next" />
 
+        <!-- Repeat carries a mode badge, so it needs a frame the icon alone wouldn't. -->
+        <FrameLayout
+            android:id="@+id/button_repeat"
+            android:layout_width="@dimen/transport_button_small"
+            android:layout_height="@dimen/transport_button_small"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_transport_button">
+
+            <ImageView
+                android:id="@+id/icon_repeat"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/action_repeat"
+                android:scaleType="center"
+                android:src="@drawable/ic_repeat"
+                app:tint="@color/transport_icon_tint" />
+
+            <TextView
+                android:id="@+id/text_repeat_badge"
+                style="@style/Text.Mono"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="6dp"
+                android:layout_marginBottom="4dp"
+                android:fontFamily="@font/jetbrains_mono_bold"
+                android:textColor="@color/accent"
+                android:textSize="@dimen/text_eq_tick"
+                tools:text="1" />
+        </FrameLayout>
     </LinearLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

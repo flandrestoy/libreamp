@@ -2,6 +2,21 @@
     <string name="app_name">LibreAmp</string>
     <string name="tab_playlist">Playlist</string>
     <string name="tab_effects">Effects</string>
+
+    <!-- Now Playing -->
+    <string name="now_playing_eyebrow">NOW PLAYING</string>
+    <string name="now_playing_no_cover">no embedded cover</string>
+    <string name="action_open_effects">Open effects</string>
+    <string name="action_open_playlist">Open playlist</string>
+    <string name="action_play">Play</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_next">Next track</string>
+    <string name="action_prev">Previous track</string>
+    <string name="action_shuffle">Shuffle</string>
+    <string name="action_repeat">Repeat</string>
+    <string name="repeat_one_badge">1</string>
+
+    <!-- Playlist -->
     <string name="action_add_files">Add files</string>
     <string name="action_sort">Sort</string>
     <string name="action_group">Group</string>
@@ -10,11 +25,18 @@
     <string name="action_remove_mode">Remove</string>
     <string name="action_delete">Delete</string>
     <string name="action_choose">Choose…</string>
+    <string name="action_reorder">Reorder</string>
     <string name="order_updated">Playlist order updated</string>
     <string name="hint_sort_by">Sort by:</string>
     <string name="hint_group_by">Group by:</string>
-    <string name="search_hint">Search title, artist, album, file</string>
+    <string name="search_hint">Search title, artist, album</string>
     <string name="notif_channel_playback">Playback</string>
+    <string name="mode_remove_title">Remove tracks</string>
+    <string name="mode_sort_title">Sort playlist</string>
+    <string name="mode_group_title">Group playlist</string>
+    <string name="mode_selected_count">%d selected</string>
+    <string name="playlist_no_results">No tracks match “%s”</string>
+    <string name="playlist_empty">Nothing in the playlist yet</string>
 
     <string name="sort_title">Title</string>
     <string name="sort_artist">Artist</string>
@@ -27,10 +49,18 @@
     <string name="group_album">Album</string>
     <string name="group_media_type">Media type</string>
 
+    <!-- Effects -->
+    <string name="effects_title">Effects</string>
+    <string name="effects_back">Back</string>
+    <string name="effects_master_on">ON</string>
+    <string name="effects_master_bypass">BYPASS</string>
     <string name="effects_enable">Enable effects</string>
     <string name="effects_preset">Preset</string>
+    <string name="effects_section_eq">EQUALIZER · %d BANDS</string>
+    <string name="effects_section_chain">PROCESSING CHAIN</string>
+    <string name="effects_section_output">OUTPUT</string>
     <string name="effects_equalizer">Equalizer (18 bands)</string>
-    <string name="effects_reset_eq">Reset equalizer</string>
+    <string name="effects_reset_eq">Reset</string>
     <string name="effects_dynamics">Dynamics and stereo</string>
     <string name="effects_crossfeed">Crossfeed (headphones)</string>
     <string name="effects_dynaudnorm">Dynamic normalization</string>
@@ -70,17 +100,22 @@
     <string name="effects_output">Output</string>
     <string name="effects_speed">Speed</string>
     <string name="effects_balance">Balance</string>
-    <string name="effects_balance_center">Center</string>
+    <string name="effects_balance_center">center</string>
     <string name="effects_balance_left">L %d%%</string>
     <string name="effects_balance_right">R %d%%</string>
 
-    <string name="file_picker_title">Select files</string>
+    <!-- File picker -->
+    <string name="file_picker_title">Add files</string>
     <string name="address_bar_hint">/storage/emulated/0</string>
     <string name="action_go">Go</string>
     <string name="action_select_all">Select all</string>
-    <string name="action_confirm">Confirm</string>
-    <string name="action_abort">Abort</string>
+    <string name="action_confirm">Add</string>
+    <string name="action_abort">Cancel</string>
     <string name="msg_cannot_read_dir">Can\'t open that directory</string>
     <string name="msg_storage_permission_required">Storage access is required to browse files</string>
-    <string name="files_selected_count">%d file(s) selected</string>
+    <string name="files_selected_count">%d selected</string>
+    <string name="file_glyph_parent">▴</string>
+    <string name="file_glyph_dir">▸</string>
+    <string name="file_glyph_audio">♪</string>
+    <string name="file_glyph_other">·</string>
 </resources>

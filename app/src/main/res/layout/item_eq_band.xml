@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/eq_band_width"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical">
-
-    <TextView
-        android:id="@+id/text_band_freq"
-        android:layout_width="56dp"
-        android:layout_height="wrap_content"
-        android:textSize="12sp" />
-
-    <SeekBar
-        android:id="@+id/seek_band"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:max="48" />
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/text_band_value"
-        android:layout_width="52dp"
+        style="@style/Text.Mono.EqValue"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="end"
-        android:textSize="12sp" />
+        tools:text="+4" />
+
+    <dev.libreamp.player.ui.widget.EqFaderView
+        android:id="@+id/fader_band"
+        android:layout_width="@dimen/eq_fader_width"
+        android:layout_height="@dimen/eq_fader_height"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp" />
+
+    <TextView
+        android:id="@+id/text_band_freq"
+        style="@style/Text.Mono.EqFreq"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="1k" />
 
 </LinearLayout>

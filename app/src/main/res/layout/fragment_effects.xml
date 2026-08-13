@@ -1,91 +1,169 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/surface"
     android:orientation="vertical">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- ==== Header ==== -->
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:title="@string/tab_effects"
-        app:titleTextColor="@android:color/white" />
+        android:layout_height="@dimen/chrome_header_height"
+        android:background="@drawable/bg_header"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="@dimen/gutter_narrow">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            style="@style/Widget.LibreAmp.IconButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="@string/effects_back"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            style="@style/Text.ScreenTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:text="@string/effects_title" />
+
+        <!-- Label and switch are one target: the word is the easier thing to hit. -->
+        <LinearLayout
+            android:id="@+id/group_master"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/text_master_state"
+                style="@style/Text.Mono.MasterState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="9dp"
+                tools:text="ON" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_enabled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:clickable="false"
+                android:focusable="false"
+                android:thumb="@drawable/switch_thumb_large"
+                app:showText="false"
+                app:track="@drawable/switch_track_large" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ==== Body ==== -->
 
     <ScrollView
+        android:id="@+id/scroll_effects"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="36dp">
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switch_enabled"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:text="@string/effects_enable"
-                android:textSize="16sp" />
+            <!-- Preset -->
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/bg_picker_row"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/gutter_narrow"
+                android:paddingTop="12dp"
+                android:paddingEnd="@dimen/gutter_narrow"
+                android:paddingBottom="12dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    style="@style/Text.FieldLabel"
+                    android:layout_width="52dp"
                     android:layout_height="wrap_content"
                     android:text="@string/effects_preset" />
 
                 <Spinner
                     android:id="@+id/spinner_preset"
+                    style="@style/Widget.LibreAmp.Spinner"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1" />
             </LinearLayout>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/effects_equalizer"
-                android:textStyle="bold" />
+            <!-- Equaliser -->
 
             <LinearLayout
-                android:id="@+id/container_bands"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/gutter_narrow"
+                android:paddingTop="14dp"
+                android:paddingEnd="@dimen/gutter_narrow"
+                android:paddingBottom="8dp">
 
-            <Button
-                android:id="@+id/button_reset_eq"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/effects_reset_eq" />
+                <TextView
+                    android:id="@+id/text_eq_section"
+                    style="@style/Text.Mono.Section"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="EQUALIZER · 18 BANDS" />
 
-            <View
+                <TextView
+                    android:id="@+id/button_reset_eq"
+                    style="@style/Widget.LibreAmp.Button.Small"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/effects_reset_eq" />
+            </LinearLayout>
+
+            <HorizontalScrollView
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:background="?android:attr/listDivider" />
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/gutter_narrow"
+                android:layout_marginEnd="@dimen/gutter_narrow"
+                android:background="@drawable/bg_inset_panel"
+                android:paddingStart="8dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="10dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/container_bands"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <!-- Processing chain -->
 
             <TextView
+                style="@style/Text.Mono.Section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/effects_dynamics"
-                android:textStyle="bold" />
+                android:paddingStart="@dimen/gutter_narrow"
+                android:paddingTop="20dp"
+                android:paddingEnd="@dimen/gutter_narrow"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_section_chain" />
 
             <LinearLayout
                 android:id="@+id/container_effects"
@@ -93,71 +171,118 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:background="?android:attr/listDivider" />
+            <!-- Output -->
 
             <TextView
+                style="@style/Text.Mono.Section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/effects_output"
-                android:textStyle="bold" />
+                android:paddingStart="@dimen/gutter_narrow"
+                android:paddingTop="20dp"
+                android:paddingEnd="@dimen/gutter_narrow"
+                android:paddingBottom="8dp"
+                android:text="@string/effects_section_output" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/bg_effect_row"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/gutter_narrow"
+                android:paddingTop="10dp"
+                android:paddingEnd="@dimen/gutter_narrow"
+                android:paddingBottom="10dp">
 
                 <TextView
-                    android:layout_width="72dp"
+                    style="@style/Text.FieldLabel"
+                    android:layout_width="64dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/effects_speed"
-                    android:textSize="13sp" />
+                    android:text="@string/effects_speed" />
 
                 <SeekBar
                     android:id="@+id/seek_speed"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
-                    android:max="175" />
+                    android:max="175"
+                    android:maxHeight="@dimen/param_track_height"
+                    android:minHeight="@dimen/param_track_height"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:progressDrawable="@drawable/param_track"
+                    android:splitTrack="false"
+                    android:thumb="@drawable/param_thumb"
+                    android:thumbOffset="0dp" />
 
                 <TextView
                     android:id="@+id/text_speed_value"
-                    android:layout_width="52dp"
+                    style="@style/Text.Mono.Value"
+                    android:layout_width="56dp"
                     android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:textSize="12sp" />
+                    android:layout_marginStart="10dp"
+                    android:textSize="@dimen/text_mono"
+                    tools:text="1.00×" />
             </LinearLayout>
 
+            <!--
+              Balance reads from a centre detent, so the tick sits behind the
+              track and the fill is suppressed; see @drawable/param_track_unfilled.
+            -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/bg_effect_row"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/gutter_narrow"
+                android:paddingTop="10dp"
+                android:paddingEnd="@dimen/gutter_narrow"
+                android:paddingBottom="10dp">
 
                 <TextView
-                    android:layout_width="72dp"
+                    style="@style/Text.FieldLabel"
+                    android:layout_width="64dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/effects_balance"
-                    android:textSize="13sp" />
+                    android:text="@string/effects_balance" />
 
-                <SeekBar
-                    android:id="@+id/seek_balance"
+                <FrameLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="100" />
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1">
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="10dp"
+                        android:layout_gravity="center"
+                        android:background="@color/text_disabled" />
+
+                    <SeekBar
+                        android:id="@+id/seek_balance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:max="100"
+                        android:maxHeight="@dimen/param_track_height"
+                        android:minHeight="@dimen/param_track_height"
+                        android:paddingStart="0dp"
+                        android:paddingEnd="0dp"
+                        android:progressDrawable="@drawable/param_track_unfilled"
+                        android:splitTrack="false"
+                        android:thumb="@drawable/param_thumb"
+                        android:thumbOffset="0dp" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/text_balance_value"
-                    android:layout_width="52dp"
+                    style="@style/Text.Mono.Value"
+                    android:layout_width="56dp"
                     android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:textSize="12sp" />
+                    android:layout_marginStart="10dp"
+                    android:textSize="@dimen/text_mono"
+                    tools:text="center" />
             </LinearLayout>
 
         </LinearLayout>

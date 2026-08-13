@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Group divider; inert, so it takes no row background or click target. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/text_group_header"
+    style="@style/Text.Mono.Section"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/surface_row_header"
+    android:paddingStart="13dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="@dimen/gutter_list"
+    android:paddingBottom="10dp"
+    tools:text="Slow Light" />

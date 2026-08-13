@@ -2,15 +2,16 @@ package dev.libreamp.player.ui.playlist
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.activity.result.contract.ActivityResultContracts
+import dev.libreamp.player.MainActivity
 import dev.libreamp.player.R
 import dev.libreamp.player.data.db.GroupKey
 import dev.libreamp.player.data.db.PlaylistEntryEntity
@@ -28,9 +30,9 @@ import dev.libreamp.player.data.db.SortKey
 import dev.libreamp.player.databinding.FragmentPlaylistBinding
 import dev.libreamp.player.playback.PlaybackController
 import dev.libreamp.player.playback.PlaybackService
+import dev.libreamp.player.playback.PlaybackState
 import dev.libreamp.player.ui.filepicker.FilePickerActivity
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import dev.libreamp.player.ui.widget.HatchDrawable
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -72,13 +74,14 @@ class PlaylistFragment : Fragment() {
     private var searchOpen = false
     private var scrollRestored = false
     private var pendingCenterOnNowPlaying = false
+    private var miniArtPath: String? = null
 
     /**
-     * The dropdowns are one-shot triggers, not state: they sit on a "choose" placeholder
-     * and snap back to it after firing, so these guard the reset from re-firing.
+     * The dropdown is a one-shot trigger, not state: it sits on a "choose"
+     * placeholder and snaps back to it after firing, so this guards the reset
+     * from re-firing.
      */
-    private var suppressSortCallback = false
-    private var suppressGroupCallback = false
+    private var suppressPickerCallback = false
 
     private val prefs by lazy {
         requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -109,7 +112,7 @@ class PlaylistFragment : Fragment() {
         adapter = PlaylistAdapter(
             onClick = { entry -> playEntry(entry) },
             onLongPress = { if (mode != Mode.SELECTION) toggleMode(Mode.SELECTION) },
-            onSelectionToggled = { _, _ -> },
+            onSelectionChanged = { updateModeTitle() },
             onStartDrag = { holder -> touchHelper.startDrag(holder) }
         )
         binding.recyclerPlaylist.layoutManager = LinearLayoutManager(requireContext())
@@ -121,8 +124,6 @@ class PlaylistFragment : Fragment() {
         )
         touchHelper.attachToRecyclerView(binding.recyclerPlaylist)
 
-        binding.toolbar.setOnMenuItemClickListener { item -> onToolbarItem(item) }
-
         binding.btnAdd.setOnClickListener {
             pickFilesLauncher.launch(Intent(requireContext(), FilePickerActivity::class.java))
         }
@@ -130,15 +131,21 @@ class PlaylistFragment : Fragment() {
         binding.btnSearch.setOnClickListener { if (searchOpen) closeSearch() else openSearch() }
         binding.btnSort.setOnClickListener { toggleMode(Mode.SORTING) }
         binding.btnGroup.setOnClickListener { toggleMode(Mode.GROUPING) }
+        binding.btnEffects.setOnClickListener { host()?.openEffects() }
         binding.btnCloseSearch.setOnClickListener { closeSearch() }
+        binding.btnExitMode.setOnClickListener { toggleMode(mode) }
+        binding.btnSelectAll.setOnClickListener { adapter.toggleSelectAll() }
+        binding.btnDeleteSelected.setOnClickListener {
+            viewModel.deleteEntries(adapter.selectedEntries())
+            toggleMode(Mode.SELECTION)
+        }
 
         binding.editSearch.doOnTextChanged { text, _, _, _ ->
             viewModel.setSearchQuery(text?.toString().orEmpty())
             recomputeDragEnabled()
         }
 
-        setUpSortSpinner()
-        setUpGroupSpinner()
+        setUpMiniPlayer()
 
         // The view can be recreated under a surviving fragment (pager offscreen limit),
         // so re-project the retained mode onto the fresh widgets and restore scroll again.
@@ -148,13 +155,14 @@ class PlaylistFragment : Fragment() {
         adapter.multiSelectMode = (mode == Mode.SELECTION)
         recomputeDragEnabled()
         updateBottomBarForMode()
-        updateToolbarForSelection()
+        updateModeBar()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.visibleEntries.collect { list ->
                     adapter.submitList(list)
                     binding.fastScrollBar.invalidate()
+                    updateEmptyState(list)
                     if (!scrollRestored && list.isNotEmpty()) {
                         scrollRestored = true
                         restoreScrollPosition()
@@ -165,10 +173,10 @@ class PlaylistFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                PlaybackController.get(requireContext()).state
-                    .map { it.entry?.id }
-                    .distinctUntilChanged()
-                    .collect { adapter.nowPlayingId = it }
+                PlaybackController.get(requireContext()).state.collect { state ->
+                    adapter.nowPlayingId = state.entry?.id
+                    bindMiniPlayer(state)
+                }
             }
         }
     }
@@ -178,54 +186,106 @@ class PlaylistFragment : Fragment() {
         saveScrollPosition()
     }
 
+    // ---- mini player ----
+
+    private fun setUpMiniPlayer() {
+        binding.miniArt.setImageDrawable(HatchDrawable(requireContext(), small = true))
+        binding.miniPlayer.setOnClickListener { host()?.showNowPlaying() }
+        binding.miniPlayPause.setOnClickListener {
+            val playing = PlaybackController.get(requireContext()).state.value.isPlaying
+            sendServiceAction(if (playing) PlaybackService.ACTION_PAUSE else PlaybackService.ACTION_PLAY)
+        }
+        binding.miniNext.setOnClickListener { sendServiceAction(PlaybackService.ACTION_NEXT) }
+    }
+
+    private fun bindMiniPlayer(state: PlaybackState) {
+        val entry = state.entry
+        // With nothing loaded there is no track to summarise, and the bar would
+        // just be an empty slab covering the last two rows of the list.
+        val present = entry != null
+        binding.miniPlayer.isVisible = present
+        binding.miniProgress.isVisible = present
+        if (entry == null) return
+
+        binding.miniTitle.text = entry.title ?: entry.displayName
+        binding.miniSubtitle.text = entry.artist.orEmpty()
+        binding.miniPlayPause.setImageResource(
+            if (state.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+        )
+        binding.miniPlayPause.contentDescription =
+            getString(if (state.isPlaying) R.string.action_pause else R.string.action_play)
+
+        if (entry.artPath != miniArtPath) {
+            miniArtPath = entry.artPath
+            val bitmap = entry.artPath?.let { BitmapFactory.decodeFile(it) }
+            if (bitmap != null) binding.miniArt.setImageBitmap(bitmap)
+            else binding.miniArt.setImageDrawable(HatchDrawable(requireContext(), small = true))
+        }
+
+        val duration = state.durationUs
+        binding.miniProgress.progress =
+            if (duration > 0) ((state.positionUs * 1000) / duration).toInt() else 0
+    }
+
     // ---- sorting / grouping: one-off rewrites of the stored order ----
 
-    /** Placeholder first, then the keys, then the reverse action. */
-    private fun setUpSortSpinner() {
-        val labels = listOf(getString(R.string.action_choose)) +
-            SortKey.values().map { it.label(requireContext()) } +
-            getString(R.string.sort_reverse)
-        binding.spinnerSortBy.adapter = spinnerAdapter(labels)
-        binding.spinnerSortBy.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+    /**
+     * One dropdown serves both modes; it is rebuilt when the mode changes rather
+     * than kept as two rows, matching the single picker strip in the design.
+     */
+    private fun populatePicker() {
+        val labels = when (mode) {
+            Mode.SORTING -> listOf(getString(R.string.action_choose)) +
+                SortKey.values().map { it.label(requireContext()) } +
+                getString(R.string.sort_reverse)
+            Mode.GROUPING -> listOf(getString(R.string.action_choose)) +
+                GroupKey.values().map { it.label(requireContext()) }
+            else -> return
+        }
+        binding.textPickerLabel.setText(
+            if (mode == Mode.GROUPING) R.string.hint_group_by else R.string.hint_sort_by
+        )
+
+        suppressPickerCallback = true
+        binding.spinnerPicker.adapter = ArrayAdapter(
+            requireContext(), android.R.layout.simple_spinner_item, labels
+        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        binding.spinnerPicker.setSelection(0, false)
+        suppressPickerCallback = false
+
+        binding.spinnerPicker.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (suppressSortCallback || position == 0) return
-                val keys = SortKey.values()
-                if (position == keys.size + 1) viewModel.reverseOrder()
-                else viewModel.applySort(keys[position - 1])
-                announceOrderChanged()
-                resetSpinner(binding.spinnerSortBy) { suppressSortCallback = it }
+                if (suppressPickerCallback || position == 0) return
+                onPickerChosen(position)
+                resetPicker()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
     }
 
-    private fun setUpGroupSpinner() {
-        val labels = listOf(getString(R.string.action_choose)) +
-            GroupKey.values().map { it.label(requireContext()) }
-        binding.spinnerGroupBy.adapter = spinnerAdapter(labels)
-        binding.spinnerGroupBy.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (suppressGroupCallback || position == 0) return
-                viewModel.applyGroup(GroupKey.values()[position - 1])
-                announceOrderChanged()
-                resetSpinner(binding.spinnerGroupBy) { suppressGroupCallback = it }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+    private fun onPickerChosen(position: Int) {
+        if (mode == Mode.GROUPING) {
+            val key = GroupKey.values()[position - 1]
+            viewModel.applyGroup(key)
+            // Headers are only truthful while the order the grouping produced is
+            // still intact, which is exactly the lifetime of this mode.
+            adapter.groupKey = key
+        } else {
+            val keys = SortKey.values()
+            if (position == keys.size + 1) viewModel.reverseOrder()
+            else viewModel.applySort(keys[position - 1])
+            adapter.groupKey = null
         }
+        announceOrderChanged()
     }
-
-    private fun spinnerAdapter(labels: List<String>) = ArrayAdapter(
-        requireContext(), android.R.layout.simple_spinner_item, labels
-    ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
     /** Posted, because Spinner ignores a selection change made from inside its own callback. */
-    private fun resetSpinner(spinner: android.widget.Spinner, setSuppressed: (Boolean) -> Unit) {
-        spinner.post {
-            setSuppressed(true)
-            spinner.setSelection(0, false)
-            setSuppressed(false)
+    private fun resetPicker() {
+        binding.spinnerPicker.post {
+            suppressPickerCallback = true
+            binding.spinnerPicker.setSelection(0, false)
+            suppressPickerCallback = false
         }
     }
 
@@ -240,7 +300,7 @@ class PlaylistFragment : Fragment() {
 
     private fun openSearch() {
         searchOpen = true
-        binding.rowSearch.visibility = View.VISIBLE
+        binding.rowSearch.isVisible = true
         binding.btnSearch.isActivated = true
         binding.editSearch.requestFocus()
         imm().showSoftInput(binding.editSearch, InputMethodManager.SHOW_IMPLICIT)
@@ -250,7 +310,7 @@ class PlaylistFragment : Fragment() {
     private fun closeSearch() {
         searchOpen = false
         binding.editSearch.setText("")
-        binding.rowSearch.visibility = View.GONE
+        binding.rowSearch.isVisible = false
         binding.btnSearch.isActivated = false
         imm().hideSoftInputFromWindow(binding.root.windowToken, 0)
         recomputeDragEnabled()
@@ -261,6 +321,16 @@ class PlaylistFragment : Fragment() {
 
     private fun imm() =
         requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+    private fun updateEmptyState(list: List<PlaylistEntryEntity>) {
+        val query = viewModel.searchQuery.value
+        binding.textEmpty.isVisible = list.isEmpty()
+        binding.textEmpty.text = when {
+            list.isNotEmpty() -> ""
+            query.isNotBlank() -> getString(R.string.playlist_no_results, query)
+            else -> getString(R.string.playlist_empty)
+        }
+    }
 
     // ---- scrolling ----
 
@@ -296,6 +366,8 @@ class PlaylistFragment : Fragment() {
 
     // ---- playback / modes ----
 
+    private fun host(): MainActivity? = activity as? MainActivity
+
     private fun playEntry(entry: PlaylistEntryEntity) {
         val ctx = requireContext()
         val intent = Intent(ctx, PlaybackService::class.java)
@@ -304,34 +376,28 @@ class PlaylistFragment : Fragment() {
         ContextCompat.startForegroundService(ctx, intent)
     }
 
+    private fun sendServiceAction(action: String) {
+        val intent = Intent(requireContext(), PlaybackService::class.java).setAction(action)
+        ContextCompat.startForegroundService(requireContext(), intent)
+    }
+
     private fun onDragFinished(from: Int, to: Int) {
         val list = adapter.currentList()
-        val moved = list[to]
+        val moved = list.getOrNull(to) ?: return
         val before = list.getOrNull(to - 1)?.takeIf { it.id != moved.id }
         val after = list.getOrNull(to + 1)?.takeIf { it.id != moved.id }
         viewModel.applyManualMove(moved, before, after)
-    }
-
-    private fun onToolbarItem(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_delete_selected) {
-            viewModel.deleteEntries(adapter.selectedEntries())
-            toggleMode(Mode.SELECTION)
-            return true
-        }
-        if (item.itemId == R.id.action_select_all) {
-            adapter.selectAll()
-            return true
-        }
-        return false
     }
 
     /** Tapping the active mode's button again returns to NORMAL; the three action modes are exclusive. */
     private fun toggleMode(target: Mode) {
         mode = if (mode == target) Mode.NORMAL else target
         adapter.multiSelectMode = (mode == Mode.SELECTION)
+        if (mode != Mode.GROUPING) adapter.groupKey = null
         recomputeDragEnabled()
         updateBottomBarForMode()
-        updateToolbarForSelection()
+        updateModeBar()
+        if (mode == Mode.SORTING || mode == Mode.GROUPING) populatePicker()
     }
 
     /**
@@ -347,14 +413,27 @@ class PlaylistFragment : Fragment() {
         binding.btnRemove.isActivated = mode == Mode.SELECTION
         binding.btnSort.isActivated = mode == Mode.SORTING
         binding.btnGroup.isActivated = mode == Mode.GROUPING
-        binding.rowSortBy.visibility = if (mode == Mode.SORTING) View.VISIBLE else View.GONE
-        binding.rowGroupBy.visibility = if (mode == Mode.GROUPING) View.VISIBLE else View.GONE
+        binding.rowPicker.isVisible = mode == Mode.SORTING || mode == Mode.GROUPING
     }
 
-    private fun updateToolbarForSelection() {
-        binding.toolbar.menu.clear()
-        if (mode == Mode.SELECTION) {
-            binding.toolbar.inflateMenu(R.menu.playlist_selection_menu)
+    private fun updateModeBar() {
+        binding.barMode.isVisible = mode != Mode.NORMAL
+        // Select-all and delete only mean anything against a selection.
+        val selecting = mode == Mode.SELECTION
+        binding.btnSelectAll.isVisible = selecting
+        binding.btnDeleteSelected.isVisible = selecting
+        updateModeTitle()
+    }
+
+    private fun updateModeTitle() {
+        val count = adapter.selectedCount()
+        binding.textModeTitle.text = when (mode) {
+            Mode.SELECTION ->
+                if (count > 0) getString(R.string.mode_selected_count, count)
+                else getString(R.string.mode_remove_title)
+            Mode.SORTING -> getString(R.string.mode_sort_title)
+            Mode.GROUPING -> getString(R.string.mode_group_title)
+            Mode.NORMAL -> ""
         }
     }
 

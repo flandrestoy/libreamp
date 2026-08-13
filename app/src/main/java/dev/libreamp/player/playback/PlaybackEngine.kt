@@ -48,9 +48,20 @@ class PlaybackEngine(context: Context) {
         am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)?.toIntOrNull() ?: 44100
     }
 
-    private var audioTrack: AudioTrack? = null
+    /** Read from the UI thread by [readSpectrum]; written on [handler]. */
+    @Volatile private var audioTrack: AudioTrack? = null
     private var nativeHandle: Long = 0L
     private var basePositionUs: Long = 0L
+
+    private val spectrum = SpectrumAnalyzer(targetSampleRate)
+
+    /**
+     * Frames handed to the AudioTrack since the last flush, which is the same
+     * origin [AudioTrack.getPlaybackHeadPosition] counts from - so a chunk's
+     * value here is the head position it becomes audible at. Wraps as an Int
+     * exactly like the head position does.
+     */
+    private var writtenFrames: Int = 0
 
     /**
      * [AudioTrack.getPlaybackHeadPosition] at the moment [basePositionUs] was last set,
@@ -181,6 +192,7 @@ class PlaybackEngine(context: Context) {
             if (flushBuffered) {
                 audioTrack?.pause()
                 audioTrack?.flush() // also resets getPlaybackHeadPosition() to 0
+                resetSpectrumOrigin()
             }
             closeCurrentLocked()
             val pfd = try {
@@ -281,6 +293,7 @@ class PlaybackEngine(context: Context) {
             audioTrack?.pause()
             val ok = NativeBridge.nativeSeekUs(nativeHandle, positionUs)
             audioTrack?.flush() // also resets getPlaybackHeadPosition() to 0
+            resetSpectrumOrigin()
             baseHeadFrames = 0
             if (ok) {
                 basePositionUs = positionUs
@@ -312,6 +325,7 @@ class PlaybackEngine(context: Context) {
             closeCurrentLocked()
             audioTrack?.pause()
             audioTrack?.flush()
+            resetSpectrumOrigin()
             _state.value = _state.value.copy(isPlaying = false, entry = null)
         }
     }
@@ -323,6 +337,25 @@ class PlaybackEngine(context: Context) {
             audioTrack = null
         }
         handlerThread.quitSafely()
+    }
+
+    /**
+     * Fills [out] with the band levels for what is audible right now, returning
+     * false when there is nothing playing to describe.
+     *
+     * Safe from the UI thread: it only reads the AudioTrack's head position and
+     * the analyzer's own synchronized ring.
+     */
+    fun readSpectrum(out: FloatArray): Boolean {
+        if (!playing) return false
+        val track = audioTrack ?: return false
+        return spectrum.bandsAt(track.playbackHeadPosition, out)
+    }
+
+    /** Call wherever the AudioTrack is flushed: its frame origin moves with it. */
+    private fun resetSpectrumOrigin() {
+        writtenFrames = 0
+        spectrum.reset()
     }
 
     private fun currentPositionUs(): Long {
@@ -377,9 +410,13 @@ class PlaybackEngine(context: Context) {
                     return
                 }
                 n > 0 -> {
+                    // Analysed before the write, which consumes the buffer, and
+                    // stamped with the head position this chunk will play at.
+                    spectrum.submit(decodeChunk, n, writtenFrames)
                     decodeChunk.limit(n)
                     decodeChunk.position(0)
                     audioTrack?.write(decodeChunk, n, AudioTrack.WRITE_BLOCKING)
+                    writtenFrames += n / BYTES_PER_FRAME
                     _state.value = _state.value.copy(positionUs = currentPositionUs())
                 }
             }
@@ -390,5 +427,6 @@ class PlaybackEngine(context: Context) {
     companion object {
         private const val CHUNK_BYTES = 16384
         private const val STEREO_CHANNELS = 2
+        private const val BYTES_PER_FRAME = 4 // 16-bit stereo
     }
 }

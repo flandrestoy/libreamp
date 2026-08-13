@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Row states, in priority order: selected (removal mode) wins over activated
+  (currently playing), because while selecting, what you've picked is what you
+  are looking at. Selection rides on state_selected rather than state_checked
+  because the row's root is a plain LinearLayout, which is not Checkable. The
+  hairline under every row closes the list into a continuous
+  ledger rather than a stack of floating cards, and the 3dp band on the leading
+  edge is what actually marks the playing track — the background tint alone is
+  too quiet to find while scrolling.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple">
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/divider_row" />
+                </shape>
+            </item>
+            <item android:bottom="1dp">
+                <selector>
+                    <item android:state_selected="true" android:drawable="@color/accent_wash" />
+                    <item android:state_activated="true" android:drawable="@color/surface_row_current" />
+                    <item android:drawable="@color/surface" />
+                </selector>
+            </item>
+            <item
+                android:bottom="1dp"
+                android:gravity="start|fill_vertical"
+                android:width="@dimen/row_marker_width">
+                <selector>
+                    <item android:state_activated="true">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/accent" />
+                        </shape>
+                    </item>
+                    <item>
+                        <shape android:shape="rectangle">
+                            <solid android:color="@android:color/transparent" />
+                        </shape>
+                    </item>
+                </selector>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

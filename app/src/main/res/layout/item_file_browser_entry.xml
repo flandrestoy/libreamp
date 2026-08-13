@@ -1,28 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:background="@drawable/bg_file_row"
     android:gravity="center_vertical"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/gutter_narrow"
     android:paddingTop="12dp"
-    android:paddingBottom="12dp"
-    android:background="?attr/selectableItemBackground">
+    android:paddingEnd="@dimen/gutter_narrow"
+    android:paddingBottom="12dp">
 
     <CheckBox
         android:id="@+id/checkbox_entry"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/checkbox_size"
+        android:layout_height="@dimen/checkbox_size"
+        android:background="@null"
+        android:button="@drawable/checkbox_square"
+        android:minWidth="0dp"
+        android:minHeight="0dp" />
+
+    <!-- Type marker: directory, playable file, or something we won't add. -->
+    <TextView
+        android:id="@+id/text_icon"
+        style="@style/Text.Mono"
+        android:layout_width="18dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp" />
+        android:layout_marginStart="12dp"
+        android:gravity="center"
+        android:textSize="@dimen/text_row_sub"
+        tools:text="♪" />
 
     <TextView
         android:id="@+id/text_name"
+        style="@style/Text.Body"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
         android:layout_weight="1"
-        android:textSize="15sp"
+        android:ellipsize="middle"
+        android:fontFamily="@font/barlow_medium"
         android:maxLines="1"
-        android:ellipsize="middle" />
+        tools:text="01 Ashen Fields.flac" />
+
+    <TextView
+        android:id="@+id/text_meta"
+        style="@style/Text.Mono.Meta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        tools:text="38.2 MB" />
 
 </LinearLayout>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Expanded effect rows lift slightly so the params below read as theirs. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple">
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/divider_section" />
+                </shape>
+            </item>
+            <item android:top="1dp">
+                <selector>
+                    <item android:state_activated="true" android:drawable="@color/surface_row_current" />
+                    <item android:drawable="@android:color/transparent" />
+                </selector>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

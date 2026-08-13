@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The 2dp inset is the switch's internal padding: an InsetDrawable reports
+  child + insets as its intrinsic size, which is what SwitchCompat measures the
+  thumb travel against, so the knob stops 2dp shy of each end.
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="2dp"
+    android:insetTop="2dp"
+    android:insetRight="2dp"
+    android:insetBottom="2dp">
+    <selector>
+        <item android:state_checked="true">
+            <shape android:shape="rectangle">
+                <size
+                    android:width="@dimen/switch_knob"
+                    android:height="@dimen/switch_knob" />
+                <solid android:color="@color/accent_grad_top" />
+            </shape>
+        </item>
+        <item>
+            <shape android:shape="rectangle">
+                <size
+                    android:width="@dimen/switch_knob"
+                    android:height="@dimen/switch_knob" />
+                <solid android:color="@color/text_ghost" />
+            </shape>
+        </item>
+    </selector>
+</inset>

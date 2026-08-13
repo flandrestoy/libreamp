@@ -1,9 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Palette for the AIMP-style dark shell. Everything is a flat, sharp-edged
+  surface over near-black, with a single orange accent ramp doing all the
+  signalling (active mode, current track, enabled effect, playback).
+-->
 <resources>
-    <!-- Currently-playing playlist row: colorAccent at ~20% so it reads on both themes. -->
-    <color name="now_playing_highlight">#33D0BCFF</color>
 
-    <color name="fast_scroll_track">#14808080</color>
-    <color name="fast_scroll_thumb">#996750A4</color>
-    <color name="fast_scroll_thumb_active">#FFD0BCFF</color>
+    <!-- Surfaces, darkest first. -->
+    <color name="ink">#0a0a0b</color>
+    <color name="surface">#131315</color>
+    <color name="surface_sunken">#17181c</color>
+    <color name="surface_panel">#1a1b1f</color>
+    <color name="surface_panel_alt">#1c1d21</color>
+    <color name="surface_row_current">#1b1c20</color>
+    <color name="surface_row_header">#101113</color>
+    <color name="surface_control">#232429</color>
+    <color name="surface_track">#212328</color>
+    <color name="surface_bar">#22242a</color>
+    <color name="surface_mini_progress">#15161a</color>
+
+    <!-- Header/bottom-bar gradient stops. -->
+    <color name="chrome_top">#2a2c31</color>
+    <color name="chrome_bottom">#1d1e22</color>
+    <color name="chrome_bottom_alt">#1c1d21</color>
+
+    <!-- Borders and dividers, weakest first. -->
+    <color name="hairline_black">#0c0c0d</color>
+    <color name="divider_row">#1a1b1e</color>
+    <color name="divider_section">#202227</color>
+    <color name="border_soft">#26282d</color>
+    <color name="border">#2b2d32</color>
+    <color name="border_strong">#33363c</color>
+    <color name="border_raised">#383b41</color>
+    <color name="border_control">#3a3d43</color>
+    <color name="eq_center_line">#3d4046</color>
+
+    <!-- Text ramp, brightest first. -->
+    <color name="text_primary">#eae8e5</color>
+    <color name="text_bright">#e0ddd9</color>
+    <color name="text_soft">#d8d5d1</color>
+    <color name="text_muted">#c9c6c2</color>
+    <color name="text_dim">#a9a6a2</color>
+    <color name="text_secondary">#8b8e95</color>
+    <color name="text_tertiary">#82858c</color>
+    <color name="text_faint">#6d7077</color>
+    <color name="text_ghost">#5f6269</color>
+    <color name="text_disabled">#4a4d54</color>
+
+    <!-- Cover-art placeholder: diagonal hatch plus its centred glyph. -->
+    <color name="art_hatch_dark">#191a1e</color>
+    <color name="art_hatch_light">#1d1e23</color>
+    <color name="art_hatch_light_small">#1e1f24</color>
+    <color name="art_glyph">#31343b</color>
+    <color name="art_glyph_small">#34373d</color>
+
+    <!-- The one accent ramp. -->
+    <color name="accent">#ff8b1f</color>
+    <color name="accent_light">#ffa24d</color>
+    <color name="accent_grad_top">#ff9a33</color>
+    <color name="accent_grad_bottom">#e06d05</color>
+    <color name="accent_edge">#ffb257</color>
+    <color name="accent_edge_dark">#7a4a10</color>
+    <color name="accent_seek_start">#c25c05</color>
+    <color name="accent_param">#c86a12</color>
+    <color name="accent_track_on">#5c3208</color>
+    <color name="accent_eq_top">#ffc07a</color>
+    <color name="accent_wash">#241a0d</color>
+    <color name="accent_wash_border">#4a3211</color>
+    <color name="on_accent">#20140a</color>
+
+    <!-- Spectrum bar gradient. -->
+    <color name="spectrum_top">#ffc98a</color>
+    <color name="spectrum_bottom">#e06d05</color>
+
+    <!-- Fast-scroll overlay, drawn over the list rather than beside them. -->
+    <color name="fast_scroll_track">#1affffff</color>
+    <color name="fast_scroll_thumb">#994a4d54</color>
+    <color name="fast_scroll_thumb_active">#ffff8b1f</color>
+
+    <color name="scrim">#99000000</color>
+    <color name="ripple">#22ff8b1f</color>
+
 </resources>

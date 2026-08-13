@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Three faders seen edge-on, the bottom one live. The accent bar is baked in
+  rather than tinted, so this icon reads the same in the Now Playing header and
+  in the playlist bottom bar without either having to state a tint.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="18dp"
+    android:height="14dp"
+    android:viewportWidth="18"
+    android:viewportHeight="14">
+    <path android:pathData="M0,0h18v2h-18z" android:fillColor="#d8d5d1" />
+    <path android:pathData="M0,6h18v2h-18z" android:fillColor="#d8d5d1" />
+    <path android:pathData="M0,12h18v2h-18z" android:fillColor="#ff8b1f" />
+</vector>

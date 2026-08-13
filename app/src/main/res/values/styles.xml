@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Every piece of type in the app goes through one of these styles, so the two
+  bundled families are named in exactly one file. Barlow carries prose and
+  labels; JetBrains Mono carries anything the eye scans as a number — times,
+  frequencies, gains, formats, counts.
+
+  minSdk is 26, where android:fontWeight is unavailable and a font-family XML
+  can only resolve normal/bold, so each weight is its own font resource.
+-->
+<resources>
+
+    <style name="Text" parent="android:Widget.TextView">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- ==== Barlow ==== -->
+
+    <style name="Text.TrackTitle">
+        <item name="android:fontFamily">@font/barlow_semibold</item>
+        <item name="android:textSize">@dimen/text_track_title</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Text.TrackSubtitle">
+        <item name="android:fontFamily">@font/barlow_regular</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Text.ScreenTitle">
+        <item name="android:fontFamily">@font/barlow_semibold</item>
+        <item name="android:textSize">@dimen/text_screen_title</item>
+    </style>
+
+    <style name="Text.TitleBar">
+        <item name="android:fontFamily">@font/barlow_semibold</item>
+        <item name="android:textSize">@dimen/text_title_bar</item>
+    </style>
+
+    <style name="Text.RowTitle">
+        <item name="android:fontFamily">@font/barlow_semibold</item>
+        <item name="android:textSize">@dimen/text_row_title</item>
+        <item name="android:textColor">@color/text_bright</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Text.RowSubtitle">
+        <item name="android:fontFamily">@font/barlow_regular</item>
+        <item name="android:textSize">@dimen/text_row_sub</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Text.MiniTitle">
+        <item name="android:fontFamily">@font/barlow_semibold</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Text.MiniSubtitle">
+        <item name="android:fontFamily">@font/barlow_regular</item>
+        <item name="android:textSize">@dimen/text_mono</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Text.EffectLabel">
+        <item name="android:fontFamily">@font/barlow_medium</item>
+        <item name="android:textSize">@dimen/text_row_title</item>
+    </style>
+
+    <style name="Text.FieldLabel">
+        <item name="android:fontFamily">@font/barlow_medium</item>
+        <item name="android:textSize">@dimen/text_row_sub</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <style name="Text.ParamLabel">
+        <item name="android:fontFamily">@font/barlow_regular</item>
+        <item name="android:textSize">@dimen/text_mono</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <style name="Text.Body">
+        <item name="android:fontFamily">@font/barlow_regular</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <style name="Text.Empty">
+        <item name="android:fontFamily">@font/barlow_regular</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">@color/text_faint</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- ==== JetBrains Mono ==== -->
+
+    <style name="Text.Mono" parent="Text">
+        <item name="android:fontFamily">@font/jetbrains_mono_medium</item>
+        <item name="android:textSize">@dimen/text_mono</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <style name="Text.Mono.Time" />
+
+    <style name="Text.Mono.RowNumber">
+        <item name="android:gravity">end</item>
+        <item name="android:textColor">@color/text_ghost</item>
+    </style>
+
+    <style name="Text.Mono.Value">
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textColor">@color/text_dim</item>
+        <item name="android:gravity">end</item>
+    </style>
+
+    <style name="Text.Mono.Chip">
+        <item name="android:textSize">@dimen/text_chip</item>
+        <item name="android:paddingStart">7dp</item>
+        <item name="android:paddingEnd">7dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+    </style>
+
+    <!-- Section rules: "EQUALIZER · 18 BANDS", "PROCESSING CHAIN", "OUTPUT". -->
+    <style name="Text.Mono.Section">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:letterSpacing">0.14</item>
+    </style>
+
+    <style name="Text.Mono.Eyebrow">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:letterSpacing">0.16</item>
+    </style>
+
+    <style name="Text.Mono.MasterState">
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <style name="Text.Mono.EqValue">
+        <item name="android:textSize">@dimen/text_eq_tick</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="Text.Mono.EqFreq" parent="Text.Mono.EqValue">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textColor">@color/text_faint</item>
+    </style>
+
+    <style name="Text.Mono.Meta">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textColor">@color/text_faint</item>
+    </style>
+
+    <style name="Text.Mono.FilterId">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textSize">@dimen/text_chip</item>
+        <item name="android:textColor">@color/text_ghost</item>
+    </style>
+
+    <!-- ==== Widgets ==== -->
+
+    <style name="Widget.LibreAmp.IconButton" parent="android:Widget">
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:scaleType">center</item>
+    </style>
+
+    <!-- Flat sharp-edged bar buttons: "Reset", "Cancel", "Add". -->
+    <style name="Widget.LibreAmp.Button" parent="android:Widget">
+        <item name="android:fontFamily">@font/barlow_medium</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:background">@drawable/bg_button_outline</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">9dp</item>
+        <item name="android:paddingBottom">9dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="Widget.LibreAmp.Button.Accent">
+        <item name="android:fontFamily">@font/barlow_semibold</item>
+        <item name="android:textColor">@color/on_accent</item>
+        <item name="android:background">@drawable/bg_button_accent</item>
+        <item name="android:paddingStart">18dp</item>
+        <item name="android:paddingEnd">18dp</item>
+    </style>
+
+    <style name="Widget.LibreAmp.Button.Small">
+        <item name="android:textSize">@dimen/text_mono</item>
+        <item name="android:textColor">@color/text_dim</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <style name="Widget.LibreAmp.Spinner" parent="Widget.AppCompat.Spinner.Underlined">
+        <item name="android:background">@drawable/bg_field</item>
+        <item name="android:popupBackground">@color/surface_control</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+    </style>
+
+    <style name="Widget.LibreAmp.SpinnerItem" parent="android:Widget.TextView.SpinnerItem">
+        <item name="android:fontFamily">@font/barlow_medium</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+
+    <style name="Widget.LibreAmp.SpinnerDropDownItem" parent="Widget.AppCompat.DropDownItem.Spinner">
+        <item name="android:fontFamily">@font/barlow_regular</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="Widget.LibreAmp.DropDownList" parent="Widget.AppCompat.ListView.DropDown">
+        <item name="android:background">@color/surface_control</item>
+        <item name="android:divider">@color/border</item>
+        <item name="android:dividerHeight">1dp</item>
+    </style>
+
+    <style name="Widget.LibreAmp.SearchField" parent="Widget.AppCompat.EditText">
+        <item name="android:fontFamily">@font/barlow_regular</item>
+        <item name="android:textSize">@dimen/text_row_title</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_faint</item>
+        <item name="android:background">@null</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:inputType">text</item>
+    </style>
+
+</resources>

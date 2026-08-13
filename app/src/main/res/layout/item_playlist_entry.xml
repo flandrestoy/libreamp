@@ -1,75 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:background="@drawable/bg_playlist_row"
     android:gravity="center_vertical"
-    android:paddingStart="12dp"
-    android:paddingEnd="26dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp"
-    android:background="@drawable/playlist_row_background">
+    android:orientation="horizontal"
+    android:paddingStart="13dp"
+    android:paddingTop="7dp"
+    android:paddingEnd="@dimen/gutter_list"
+    android:paddingBottom="7dp">
 
     <TextView
         android:id="@+id/text_track_number"
-        android:layout_width="28dp"
+        style="@style/Text.Mono.RowNumber"
+        android:layout_width="@dimen/row_number_width"
         android:layout_height="wrap_content"
-        android:gravity="end"
         android:layout_marginEnd="8dp"
-        android:textSize="13sp"
-        android:alpha="0.6" />
+        android:textColor="@color/row_number_tint"
+        tools:text="04" />
 
     <CheckBox
         android:id="@+id/checkbox_select"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/checkbox_size"
+        android:layout_height="@dimen/checkbox_size"
+        android:layout_marginEnd="10dp"
+        android:background="@null"
+        android:button="@drawable/checkbox_square"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         android:visibility="gone"
-        android:layout_marginEnd="8dp" />
+        tools:visibility="visible" />
 
     <ImageView
         android:id="@+id/image_art"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_placeholder_album_art" />
+        android:layout_width="@dimen/row_art"
+        android:layout_height="@dimen/row_art"
+        android:contentDescription="@null"
+        android:foreground="@drawable/bg_art_frame"
+        android:scaleType="centerCrop" />
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:layout_marginStart="12dp"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/text_title"
+            style="@style/Text.RowTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:textColor="@color/row_title_tint"
+            tools:text="Nightbus to Ōmiya" />
 
         <TextView
             android:id="@+id/text_subtitle"
+            style="@style/Text.RowSubtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:layout_marginTop="1dp"
+            tools:text="Kōji Nagata · Slow Light" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/text_duration"
+        style="@style/Text.Mono"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:textSize="13sp" />
+        android:textColor="@color/text_tertiary"
+        tools:text="5:21" />
 
     <ImageView
         android:id="@+id/drag_handle"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
-        android:src="@android:drawable/ic_menu_sort_by_size" />
+        android:contentDescription="@string/action_reorder"
+        android:src="@drawable/ic_drag_handle"
+        android:visibility="gone"
+        tools:visibility="visible" />
 
 </LinearLayout>

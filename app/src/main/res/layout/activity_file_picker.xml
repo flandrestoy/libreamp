@@ -1,52 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/surface"
     android:orientation="vertical">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:title="@string/file_picker_title"
-        app:titleTextColor="@android:color/white" />
+    <!-- ==== Header ==== -->
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/chrome_header_height"
+        android:background="@drawable/bg_header"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="8dp"
-        android:gravity="center_vertical">
+        android:paddingStart="8dp"
+        android:paddingEnd="@dimen/gutter_narrow">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            style="@style/Widget.LibreAmp.IconButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="@string/effects_back"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            style="@style/Text.ScreenTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:text="@string/file_picker_title" />
+
+        <TextView
+            android:id="@+id/button_select_all"
+            style="@style/Text.FieldLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="@string/action_select_all"
+            android:textColor="@color/accent" />
+    </LinearLayout>
+
+    <!--
+      The path is the one thing that says where you are, and it is the tail that
+      matters, so it ellipsizes from the front.
+    -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_path_bar"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/gutter_narrow"
+        android:paddingTop="10dp"
+        android:paddingEnd="@dimen/gutter_narrow"
+        android:paddingBottom="10dp">
 
         <EditText
             android:id="@+id/edit_address"
+            style="@style/Widget.LibreAmp.SearchField"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:inputType="text"
-            android:singleLine="true"
+            android:ellipsize="start"
+            android:fontFamily="@font/jetbrains_mono_regular"
+            android:hint="@string/address_bar_hint"
             android:imeOptions="actionGo"
-            android:hint="@string/address_bar_hint" />
+            android:importantForAutofill="no"
+            android:textSize="@dimen/text_mono" />
 
-        <Button
+        <TextView
             android:id="@+id/button_go"
-            style="?android:attr/borderlessButtonStyle"
+            style="@style/Widget.LibreAmp.Button.Small"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:text="@string/action_go" />
-
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/text_selection_count"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="4dp"
-        android:textSize="13sp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_files"
@@ -55,33 +90,41 @@
         android:layout_weight="1"
         android:clipToPadding="false" />
 
+    <!-- ==== Confirm bar ==== -->
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_bottom_bar"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:paddingStart="@dimen/gutter_narrow"
+        android:paddingTop="11dp"
+        android:paddingEnd="@dimen/gutter_narrow"
+        android:paddingBottom="11dp">
 
-        <Button
-            android:id="@+id/button_select_all"
+        <TextView
+            android:id="@+id/text_selection_count"
+            style="@style/Text.Mono"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/action_select_all" />
+            tools:text="3 selected" />
 
-        <Button
+        <TextView
             android:id="@+id/button_abort"
-            android:layout_width="0dp"
+            style="@style/Widget.LibreAmp.Button"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="@string/action_abort" />
 
-        <Button
+        <TextView
             android:id="@+id/button_confirm"
-            android:layout_width="0dp"
+            style="@style/Widget.LibreAmp.Button.Accent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_marginStart="8dp"
             android:text="@string/action_confirm" />
-
     </LinearLayout>
 
 </LinearLayout>

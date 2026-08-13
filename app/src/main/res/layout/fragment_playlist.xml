@@ -1,187 +1,334 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+  Vertical stack for the chrome and the list; the mini player is a sibling of
+  that stack rather than part of it, floating over the list and sitting flush on
+  the bottom bar, so it can appear and disappear without relaying out the list.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:title="@string/tab_playlist"
-        app:titleTextColor="@android:color/white" />
+    android:background="@color/surface">
 
     <LinearLayout
-        android:id="@+id/row_search"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- ==== Mode title bar: only present while a mode is active ==== -->
+
+        <LinearLayout
+            android:id="@+id/bar_mode"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/chrome_header_height"
+            android:background="@drawable/bg_header"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingEnd="6dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/btn_exit_mode"
+                style="@style/Widget.LibreAmp.IconButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/action_close_search"
+                android:src="@drawable/ic_close" />
+
+            <TextView
+                android:id="@+id/text_mode_title"
+                style="@style/Text.TitleBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                tools:text="Remove tracks" />
+
+            <ImageView
+                android:id="@+id/btn_select_all"
+                style="@style/Widget.LibreAmp.IconButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:contentDescription="@string/action_select_all"
+                android:src="@drawable/ic_select_all" />
+
+            <ImageView
+                android:id="@+id/btn_delete_selected"
+                style="@style/Widget.LibreAmp.IconButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:contentDescription="@string/action_delete"
+                android:src="@drawable/ic_delete" />
+        </LinearLayout>
+
+        <!-- ==== Search ==== -->
+
+        <LinearLayout
+            android:id="@+id/row_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_search_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/gutter_list"
+            android:paddingTop="9dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="9dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_search"
+                android:tint="@color/text_secondary" />
+
+            <EditText
+                android:id="@+id/edit_search"
+                style="@style/Widget.LibreAmp.SearchField"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:hint="@string/search_hint"
+                android:imeOptions="actionSearch"
+                android:importantForAutofill="no" />
+
+            <ImageView
+                android:id="@+id/btn_close_search"
+                style="@style/Widget.LibreAmp.IconButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/action_close_search"
+                android:src="@drawable/ic_close"
+                android:tint="@color/text_secondary" />
+        </LinearLayout>
+
+        <!-- ==== Sort / group picker ==== -->
+
+        <LinearLayout
+            android:id="@+id/row_picker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_picker_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/gutter_narrow"
+            android:paddingTop="10dp"
+            android:paddingEnd="@dimen/gutter_narrow"
+            android:paddingBottom="10dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/text_picker_label"
+                style="@style/Text.FieldLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Sort by:" />
+
+            <Spinner
+                android:id="@+id/spinner_picker"
+                style="@style/Widget.LibreAmp.Spinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <!-- ==== List ==== -->
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_playlist"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="66dp" />
+
+            <TextView
+                android:id="@+id/text_empty"
+                style="@style/Text.Empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|top"
+                android:layout_marginTop="44dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:visibility="gone"
+                tools:text="No tracks match “grain”"
+                tools:visibility="visible" />
+
+            <dev.libreamp.player.ui.playlist.FastScrollBar
+                android:id="@+id/fast_scroll_bar"
+                android:layout_width="22dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end" />
+        </FrameLayout>
+
+        <!-- ==== Bottom bar ==== -->
+
+        <LinearLayout
+            android:id="@+id/bottom_bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/chrome_bottom_bar_height"
+            android:background="@drawable/bg_bottom_bar"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/btn_add"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_bar_button"
+                android:contentDescription="@string/action_add_files"
+                android:scaleType="center"
+                android:src="@drawable/ic_add"
+                android:tint="@color/bar_icon_tint" />
+
+            <ImageView
+                android:id="@+id/btn_remove"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_bar_button"
+                android:contentDescription="@string/action_remove_mode"
+                android:scaleType="center"
+                android:src="@drawable/ic_remove"
+                android:tint="@color/bar_icon_tint" />
+
+            <ImageView
+                android:id="@+id/btn_search"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_bar_button"
+                android:contentDescription="@string/action_search"
+                android:scaleType="center"
+                android:src="@drawable/ic_search"
+                android:tint="@color/bar_icon_tint" />
+
+            <ImageView
+                android:id="@+id/btn_sort"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_bar_button"
+                android:contentDescription="@string/action_sort"
+                android:scaleType="center"
+                android:src="@drawable/ic_sort"
+                android:tint="@color/bar_icon_tint" />
+
+            <ImageView
+                android:id="@+id/btn_group"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_bar_button"
+                android:contentDescription="@string/action_group"
+                android:scaleType="center"
+                android:src="@drawable/ic_group"
+                android:tint="@color/bar_icon_tint" />
+
+            <ImageView
+                android:id="@+id/btn_effects"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_bar_button"
+                android:contentDescription="@string/action_open_effects"
+                android:scaleType="center"
+                android:src="@drawable/ic_effects" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ==== Mini player ==== -->
+
+    <LinearLayout
+        android:id="@+id/mini_player"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/mini_player_height"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/mini_player_inset"
+        android:layout_marginEnd="@dimen/mini_player_inset"
+        android:layout_marginBottom="@dimen/chrome_bottom_bar_height"
+        android:background="@drawable/bg_mini_player"
+        android:elevation="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="8dp"
-        android:visibility="gone">
+        android:paddingEnd="6dp">
 
-        <EditText
-            android:id="@+id/edit_search"
+        <ImageView
+            android:id="@+id/mini_art"
+            android:layout_width="@dimen/mini_player_art"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/border_raised" />
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="11dp"
             android:layout_weight="1"
-            android:hint="@string/search_hint"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:maxLines="1"
-            android:textColor="@android:color/white"
-            android:textColorHint="#99FFFFFF"
-            android:importantForAutofill="no" />
+            android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/btn_close_search"
+            <TextView
+                android:id="@+id/mini_title"
+                style="@style/Text.MiniTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Nightbus to Ōmiya" />
+
+            <TextView
+                android:id="@+id/mini_subtitle"
+                style="@style/Text.MiniSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                tools:text="Kōji Nagata" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/mini_play_pause"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/action_close_search"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:tint="@android:color/white" />
+            android:background="@drawable/bg_button_accent"
+            android:contentDescription="@string/action_play"
+            android:scaleType="center"
+            android:src="@drawable/ic_play" />
+
+        <ImageView
+            android:id="@+id/mini_next"
+            style="@style/Widget.LibreAmp.IconButton"
+            android:layout_width="38dp"
+            android:layout_height="40dp"
+            android:contentDescription="@string/action_next"
+            android:src="@drawable/ic_next"
+            android:tint="@color/text_muted" />
     </LinearLayout>
 
-    <!-- Sorting/grouping controls sit under the toolbar, next to the list they act on. -->
-    <LinearLayout
-        android:id="@+id/row_sort_by"
+    <!-- Playback progress, hairline along the mini player's bottom edge. -->
+    <ProgressBar
+        android:id="@+id/mini_progress"
+        style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="10dp"
-        android:visibility="gone">
+        android:layout_height="@dimen/mini_player_progress_height"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/mini_player_inset"
+        android:layout_marginEnd="@dimen/mini_player_inset"
+        android:layout_marginBottom="@dimen/chrome_bottom_bar_height"
+        android:elevation="8dp"
+        android:max="1000"
+        android:progressDrawable="@drawable/mini_progress" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_sort_by"
-            android:textColor="@android:color/white" />
-
-        <Spinner
-            android:id="@+id/spinner_sort_by"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/row_group_by"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="10dp"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hint_group_by"
-            android:textColor="@android:color/white" />
-
-        <Spinner
-            android:id="@+id/spinner_group_by"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1" />
-    </LinearLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_playlist"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false" />
-
-        <dev.libreamp.player.ui.playlist.FastScrollBar
-            android:id="@+id/fast_scroll_bar"
-            android:layout_width="22dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="end" />
-    </FrameLayout>
-
-    <LinearLayout
-        android:id="@+id/bottom_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="?attr/colorPrimary"
-        android:elevation="8dp">
-
-        <ImageButton
-            android:id="@+id/btn_add"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/action_add_files"
-            android:padding="12dp"
-            android:src="@android:drawable/ic_input_add"
-            android:tint="@color/bottom_bar_icon_tint" />
-
-        <ImageButton
-            android:id="@+id/btn_remove"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/action_remove_mode"
-            android:padding="12dp"
-            android:src="@drawable/ic_remove"
-            android:tint="@color/bottom_bar_icon_tint" />
-
-        <ImageButton
-            android:id="@+id/btn_search"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/action_search"
-            android:padding="12dp"
-            android:src="@android:drawable/ic_menu_search"
-            android:tint="@color/bottom_bar_icon_tint" />
-
-        <ImageButton
-            android:id="@+id/btn_sort"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/action_sort"
-            android:padding="12dp"
-            android:src="@drawable/ic_sort"
-            android:tint="@color/bottom_bar_icon_tint" />
-
-        <ImageButton
-            android:id="@+id/btn_group"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/action_group"
-            android:padding="12dp"
-            android:src="@drawable/ic_group"
-            android:tint="@color/bottom_bar_icon_tint" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</FrameLayout>

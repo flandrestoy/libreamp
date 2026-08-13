@@ -1,22 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_effect"
+    <LinearLayout
+        android:id="@+id/row_effect"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp" />
+        android:background="@drawable/bg_effect_row"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/gutter_narrow"
+        android:paddingTop="11dp"
+        android:paddingEnd="@dimen/gutter_narrow"
+        android:paddingBottom="11dp">
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_effect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:thumb="@drawable/switch_thumb"
+            app:showText="false"
+            app:track="@drawable/switch_track" />
+
+        <TextView
+            android:id="@+id/text_effect_label"
+            style="@style/Text.EffectLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            tools:text="Compressor" />
+
+        <TextView
+            android:id="@+id/text_effect_id"
+            style="@style/Text.Mono.FilterId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="acompressor" />
+
+        <TextView
+            android:id="@+id/text_chevron"
+            style="@style/Text.Body"
+            android:layout_width="16dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/text_faint"
+            android:textSize="@dimen/text_label"
+            tools:text="▾" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/container_params"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="4dp"
-        android:orientation="vertical" />
+        android:background="@color/surface_sunken"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="@dimen/gutter_narrow"
+        android:paddingBottom="12dp"
+        android:visibility="gone" />
 
 </LinearLayout>

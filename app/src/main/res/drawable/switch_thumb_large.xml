@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="2dp"
+    android:insetTop="2dp"
+    android:insetRight="2dp"
+    android:insetBottom="2dp">
+    <selector>
+        <item android:state_checked="true">
+            <shape android:shape="rectangle">
+                <size
+                    android:width="@dimen/switch_knob_large"
+                    android:height="@dimen/switch_knob_large" />
+                <solid android:color="@color/accent_grad_top" />
+            </shape>
+        </item>
+        <item>
+            <shape android:shape="rectangle">
+                <size
+                    android:width="@dimen/switch_knob_large"
+                    android:height="@dimen/switch_knob_large" />
+                <solid android:color="@color/text_ghost" />
+            </shape>
+        </item>
+    </selector>
+</inset>

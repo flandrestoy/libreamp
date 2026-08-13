@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Raised chrome: a shallow top-lit gradient closed off by a hard black hairline. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/hairline_black" />
+        </shape>
+    </item>
+    <item android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="@color/chrome_top"
+                android:endColor="@color/chrome_bottom" />
+        </shape>
+    </item>
+</layer-list>

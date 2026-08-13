@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Chrome -->
+    <dimen name="chrome_header_height">54dp</dimen>
+    <dimen name="chrome_bottom_bar_height">50dp</dimen>
+    <dimen name="hairline">1dp</dimen>
+
+    <!-- Screen gutters -->
+    <dimen name="gutter">18dp</dimen>
+    <dimen name="gutter_narrow">14dp</dimen>
+    <dimen name="gutter_list">16dp</dimen>
+
+    <!-- Now Playing -->
+    <dimen name="now_playing_header_height">46dp</dimen>
+    <dimen name="spectrum_height">44dp</dimen>
+    <dimen name="transport_button">54dp</dimen>
+    <dimen name="transport_button_small">46dp</dimen>
+    <dimen name="transport_button_play">70dp</dimen>
+    <dimen name="seek_track_height">7dp</dimen>
+    <dimen name="seek_thumb_width">6dp</dimen>
+    <dimen name="seek_thumb_height">15dp</dimen>
+
+    <!-- Playlist -->
+    <dimen name="row_art">42dp</dimen>
+    <dimen name="row_marker_width">3dp</dimen>
+    <dimen name="row_number_width">24dp</dimen>
+    <dimen name="checkbox_size">19dp</dimen>
+    <dimen name="mini_player_height">58dp</dimen>
+    <dimen name="mini_player_art">56dp</dimen>
+    <dimen name="mini_player_inset">8dp</dimen>
+    <dimen name="mini_player_progress_height">2dp</dimen>
+
+    <!-- Effects -->
+    <dimen name="eq_band_width">26dp</dimen>
+    <dimen name="eq_band_gap">5dp</dimen>
+    <dimen name="eq_fader_height">118dp</dimen>
+    <dimen name="eq_fader_width">22dp</dimen>
+    <dimen name="param_label_width">92dp</dimen>
+    <dimen name="param_value_width">64dp</dimen>
+    <dimen name="param_track_height">4dp</dimen>
+    <dimen name="param_thumb_width">5dp</dimen>
+    <dimen name="param_thumb_height">11dp</dimen>
+    <dimen name="switch_width">40dp</dimen>
+    <dimen name="switch_height">22dp</dimen>
+    <dimen name="switch_knob">16dp</dimen>
+    <dimen name="switch_width_large">46dp</dimen>
+    <dimen name="switch_height_large">26dp</dimen>
+    <dimen name="switch_knob_large">20dp</dimen>
+
+    <!-- Type sizes -->
+    <dimen name="text_track_title">22sp</dimen>
+    <dimen name="text_screen_title">17sp</dimen>
+    <dimen name="text_title_bar">16sp</dimen>
+    <dimen name="text_row_title">15sp</dimen>
+    <dimen name="text_body">14sp</dimen>
+    <dimen name="text_row_sub">13sp</dimen>
+    <dimen name="text_mono">12sp</dimen>
+    <dimen name="text_label">11sp</dimen>
+    <dimen name="text_chip">10sp</dimen>
+    <dimen name="text_eq_tick">9sp</dimen>
+
+</resources>

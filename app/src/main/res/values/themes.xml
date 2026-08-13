@@ -1,7 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.LibreAmp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#6750A4</item>
-        <item name="colorPrimaryDark">#4F378B</item>
-        <item name="colorAccent">#D0BCFF</item>
+
+    <!--
+      Dark-only. The design is a single committed look, not a DayNight pair, so
+      the theme pins the dark palette rather than inheriting a system one that
+      would repaint half the widgets in light mode.
+    -->
+    <style name="Theme.LibreAmp" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorPrimaryDark">@color/hairline_black</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="colorControlNormal">@color/text_secondary</item>
+        <item name="colorControlActivated">@color/accent</item>
+        <item name="colorControlHighlight">@color/ripple</item>
+
+        <item name="android:windowBackground">@color/surface</item>
+        <item name="android:colorBackground">@color/surface</item>
+        <item name="android:statusBarColor">@color/hairline_black</item>
+        <item name="android:navigationBarColor">@color/chrome_bottom_alt</item>
+
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorHint">@color/text_faint</item>
+
+        <!-- Spinners are the one stock widget the design keeps; give it the panel look. -->
+        <item name="android:spinnerItemStyle">@style/Widget.LibreAmp.SpinnerItem</item>
+        <item name="android:dropDownListViewStyle">@style/Widget.LibreAmp.DropDownList</item>
+        <item name="android:spinnerDropDownItemStyle">@style/Widget.LibreAmp.SpinnerDropDownItem</item>
     </style>
+
 </resources>

@@ -17,6 +17,9 @@ class PlaylistTouchCallback(
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
         if (!adapter.dragEnabled || adapter.multiSelectMode) return makeMovementFlags(0, 0)
+        // Group dividers are not rows the user owns; they must not be draggable
+        // and nothing may be dropped onto their index.
+        if (!adapter.isTrackRow(viewHolder.bindingAdapterPosition)) return makeMovementFlags(0, 0)
         val dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN
         return makeMovementFlags(dragFlags, 0)
     }
@@ -28,6 +31,7 @@ class PlaylistTouchCallback(
     ): Boolean {
         val from = viewHolder.bindingAdapterPosition
         val to = target.bindingAdapterPosition
+        if (!adapter.isTrackRow(to)) return false
         if (dragStartPos == -1) dragStartPos = from
         dragEndPos = to
         adapter.moveItemVisually(from, to)

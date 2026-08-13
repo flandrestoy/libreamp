@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bottom-bar cells. The active mode is shown by filling the whole cell with the
+  accent wash (the icon tint switches alongside, see color/bar_icon_tint.xml),
+  which is why this isn't a borderless ripple.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple">
+    <item>
+        <selector>
+            <item android:state_activated="true" android:drawable="@color/accent_wash" />
+            <item android:drawable="@android:color/transparent" />
+        </selector>
+    </item>
+</ripple>

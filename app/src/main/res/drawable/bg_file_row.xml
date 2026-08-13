@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple">
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/divider_row" />
+                </shape>
+            </item>
+            <item android:bottom="1dp">
+                <selector>
+                    <item android:state_selected="true" android:drawable="@color/accent_wash" />
+                    <item android:drawable="@color/surface" />
+                </selector>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

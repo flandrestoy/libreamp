@@ -1,27 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
 
     <TextView
         android:id="@+id/text_param_label"
-        android:layout_width="92dp"
+        style="@style/Text.ParamLabel"
+        android:layout_width="@dimen/param_label_width"
         android:layout_height="wrap_content"
-        android:textSize="12sp" />
+        tools:text="Threshold" />
 
     <SeekBar
         android:id="@+id/seek_param"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1" />
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:maxHeight="@dimen/param_track_height"
+        android:minHeight="@dimen/param_track_height"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:progressDrawable="@drawable/param_track"
+        android:splitTrack="false"
+        android:thumb="@drawable/param_thumb"
+        android:thumbOffset="0dp" />
 
     <TextView
         android:id="@+id/text_param_value"
-        android:layout_width="64dp"
+        style="@style/Text.Mono.Value"
+        android:layout_width="@dimen/param_value_width"
         android:layout_height="wrap_content"
-        android:gravity="end"
-        android:textSize="12sp" />
+        android:layout_marginStart="10dp"
+        tools:text="-18.0 dB" />
 
 </LinearLayout>
