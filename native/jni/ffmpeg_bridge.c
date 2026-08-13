@@ -613,14 +613,47 @@ Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeSeekUs(
     return JNI_TRUE;
 }
 
+// Tag text is handed to Kotlin as raw bytes, never as a jstring: NewStringUTF
+// requires modified UTF-8 and *aborts the process* under CheckJNI on anything
+// else, and FFmpeg does not guarantee UTF-8 here - ID3v1 fields in particular
+// are copied out byte-for-byte in whatever legacy codepage the tagger used
+// (CP1251, CP1252, Shift-JIS, ...). Charset guessing lives on the Kotlin side,
+// which has real charset support.
+static jbyteArray tag_bytes(JNIEnv *env, const char *s) {
+    size_t len = s ? strlen(s) : 0;
+    jbyteArray arr = (*env)->NewByteArray(env, (jsize) len);
+    if (!arr) return NULL;
+    if (len) (*env)->SetByteArrayRegion(env, arr, 0, (jsize) len, (const jbyte *) s);
+    return arr;
+}
+
+// Stores one k/v pair, releasing the local refs immediately: a file with many
+// tags would otherwise pile up local references for the whole call.
+static void put_tag_pair(JNIEnv *env, jobjectArray dst, int *idx, AVDictionaryEntry *e) {
+    jbyteArray k = tag_bytes(env, e->key);
+    if (k) {
+        (*env)->SetObjectArrayElement(env, dst, (*idx)++, k);
+        (*env)->DeleteLocalRef(env, k);
+    } else {
+        (*idx)++;
+    }
+    jbyteArray v = tag_bytes(env, e->value);
+    if (v) {
+        (*env)->SetObjectArrayElement(env, dst, (*idx)++, v);
+        (*env)->DeleteLocalRef(env, v);
+    } else {
+        (*idx)++;
+    }
+}
+
 JNIEXPORT jobjectArray JNICALL
 Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeGetTags(
         JNIEnv *env, jobject thiz, jlong handle) {
     (void) thiz;
     PlayerContext *ctx = (PlayerContext *) (intptr_t) handle;
-    jclass stringClass = (*env)->FindClass(env, "java/lang/String");
+    jclass byteArrayClass = (*env)->FindClass(env, "[B");
     if (!ctx || !ctx->fmt_ctx) {
-        return (*env)->NewObjectArray(env, 0, stringClass, NULL);
+        return (*env)->NewObjectArray(env, 0, byteArrayClass, NULL);
     }
 
     // Count entries first (format-level + the audio stream's own metadata).
@@ -631,17 +664,16 @@ Java_dev_libreamp_player_native_1bridge_NativeBridge_nativeGetTags(
     e = NULL;
     while ((e = av_dict_get(st_audio->metadata, "", e, AV_DICT_IGNORE_SUFFIX))) count++;
 
-    jobjectArray result = (*env)->NewObjectArray(env, count * 2, stringClass, NULL);
+    jobjectArray result = (*env)->NewObjectArray(env, count * 2, byteArrayClass, NULL);
+    if (!result) return NULL;
     int idx = 0;
     e = NULL;
     while ((e = av_dict_get(ctx->fmt_ctx->metadata, "", e, AV_DICT_IGNORE_SUFFIX))) {
-        (*env)->SetObjectArrayElement(env, result, idx++, (*env)->NewStringUTF(env, e->key));
-        (*env)->SetObjectArrayElement(env, result, idx++, (*env)->NewStringUTF(env, e->value));
+        put_tag_pair(env, result, &idx, e);
     }
     e = NULL;
     while ((e = av_dict_get(st_audio->metadata, "", e, AV_DICT_IGNORE_SUFFIX))) {
-        (*env)->SetObjectArrayElement(env, result, idx++, (*env)->NewStringUTF(env, e->key));
-        (*env)->SetObjectArrayElement(env, result, idx++, (*env)->NewStringUTF(env, e->value));
+        put_tag_pair(env, result, &idx, e);
     }
     return result;
 }

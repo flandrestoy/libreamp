@@ -59,7 +59,9 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
     fun addFiles(context: Context, uris: List<Uri>) {
         viewModelScope.launch {
             val picked = withContext(Dispatchers.IO) {
-                uris.mapNotNull { uri -> MediaProbe.probe(context, uri) }
+                // One unreadable/malformed file must not discard the rest of the batch —
+                // adding hundreds of files at once is a normal thing to do here.
+                uris.mapNotNull { uri -> runCatching { MediaProbe.probe(context, uri) }.getOrNull() }
             }
             if (picked.isNotEmpty()) repository.addFiles(picked)
         }
