@@ -318,6 +318,10 @@ class PlaylistFragment : Fragment() {
             toggleMode(Mode.SELECTION)
             return true
         }
+        if (item.itemId == R.id.action_select_all) {
+            adapter.selectAll()
+            return true
+        }
         return false
     }
 

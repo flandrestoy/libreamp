@@ -56,6 +56,11 @@ class PlaylistAdapter(
 
     fun selectedEntries(): List<PlaylistEntryEntity> = items.filter { it.id in selectedIds }
 
+    fun selectAll() {
+        selectedIds.addAll(items.map { it.id })
+        notifyDataSetChanged()
+    }
+
     /** Purely visual reorder while dragging; persistence happens once on drag-end. */
     fun moveItemVisually(from: Int, to: Int) {
         items = items.toMutableList().apply { add(to, removeAt(from)) }
