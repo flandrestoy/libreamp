@@ -11,12 +11,17 @@ import android.os.Handler
 import android.os.HandlerThread
 import androidx.core.net.toUri
 import dev.libreamp.player.data.db.PlaylistEntryEntity
+import dev.libreamp.player.data.effects.EQ_BAND_COUNT
+import dev.libreamp.player.data.effects.EQ_FILTER_INSTANCE
+import dev.libreamp.player.data.effects.EQ_FREQUENCIES
 import dev.libreamp.player.data.effects.EffectsConfig
 import dev.libreamp.player.data.effects.EffectsStore
+import dev.libreamp.player.data.effects.eqBandWidth
 import dev.libreamp.player.native_bridge.NativeBridge
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.nio.ByteBuffer
+import java.util.Locale
 
 /**
  * Owns a single dedicated decode thread, one long-lived [AudioTrack] for the whole
@@ -42,12 +47,19 @@ class PlaybackEngine(context: Context) {
         val am = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)?.toIntOrNull() ?: 44100
     }
-    private val bytesPerSecond = targetSampleRate * OUT_CHANNELS * BYTES_PER_SAMPLE
 
     private var audioTrack: AudioTrack? = null
     private var nativeHandle: Long = 0L
     private var basePositionUs: Long = 0L
-    private var bytesWrittenSinceBase: Long = 0L
+
+    /**
+     * [AudioTrack.getPlaybackHeadPosition] at the moment [basePositionUs] was last set,
+     * so the delta between it and the live head position is frames *actually rendered*
+     * since then. Using bytes written to the track instead would run ahead by however
+     * much is still sitting in the track's buffer, unplayed - most visible on pause,
+     * where a byte-based estimate freezes at a point that hasn't been heard yet.
+     */
+    private var baseHeadFrames: Int = 0
     private val decodeChunk: ByteBuffer = ByteBuffer.allocateDirect(CHUNK_BYTES)
 
     @Volatile private var playing = false
@@ -95,8 +107,8 @@ class PlaybackEngine(context: Context) {
     /**
      * Pushes the non-ffmpeg half of the chain (speed, balance, ducking) onto the
      * AudioTrack. Speed lives here rather than in an `atempo` filter so that
-     * [bytesWrittenSinceBase] keeps measuring *source* PCM and the position estimate
-     * stays truthful at any rate.
+     * [AudioTrack.getPlaybackHeadPosition] keeps counting *source* frames and the
+     * position estimate stays truthful at any rate.
      */
     @Suppress("DEPRECATION") // setStereoVolume: the only per-channel gain API there is
     private fun applyTrackEffects() {
@@ -128,6 +140,30 @@ class PlaybackEngine(context: Context) {
         }
     }
 
+    /**
+     * Live-tweaks one eq band's gain on the already-running `anequalizer` stage
+     * instead of going through [applyEffects], which rebuilds the whole graph (and
+     * with it the filter's FFT/biquad state) on every call - audible as a click on
+     * every drag tick. Requires effects to already be enabled for the open handle,
+     * since that's what puts the eq stage in the graph in the first place; see
+     * [EffectsConfig.toFilterGraph], which keeps it there even when flat just so
+     * this has something to update.
+     */
+    fun applyEqBand(index: Int, db: Float) {
+        handler.post {
+            if (nativeHandle == 0L || !effects.enabled) return@post
+            val freq = EQ_FREQUENCIES[index]
+            val width = eqBandWidth(freq)
+            for (channel in 0 until STEREO_CHANNELS) {
+                val filterIndex = channel * EQ_BAND_COUNT + index
+                val arg = String.format(
+                    Locale.US, "%d|f=%d|w=%.1f|g=%.2f", filterIndex, freq, width, db
+                )
+                NativeBridge.nativeSendFilterCommand(nativeHandle, EQ_FILTER_INSTANCE, "change", arg)
+            }
+        }
+    }
+
     fun audioSessionId(): Int = audioTrack?.audioSessionId ?: 0
 
     fun play(entry: PlaylistEntryEntity) {
@@ -152,13 +188,13 @@ class PlaybackEngine(context: Context) {
             }
             nativeHandle = handle
             basePositionUs = 0L
-            bytesWrittenSinceBase = 0L
 
             // The graph is per-PlayerContext, so it dies with the previous handle and
             // has to be reinstalled for every track.
             applyFilterGraph()
 
             ensureAudioTrack()
+            baseHeadFrames = audioTrack?.playbackHeadPosition ?: 0
             audioTrack?.play()
             playing = true
             _state.value = _state.value.copy(
@@ -177,7 +213,7 @@ class PlaybackEngine(context: Context) {
             if (userInitiated) pendingAutoPause = false
             playing = false
             audioTrack?.pause()
-            _state.value = _state.value.copy(isPlaying = false)
+            _state.value = _state.value.copy(isPlaying = false, positionUs = currentPositionUs())
         }
     }
 
@@ -199,7 +235,7 @@ class PlaybackEngine(context: Context) {
                 pendingAutoPause = true
                 playing = false
                 audioTrack?.pause()
-                _state.value = _state.value.copy(isPlaying = false)
+                _state.value = _state.value.copy(isPlaying = false, positionUs = currentPositionUs())
             }
         }
     }
@@ -230,10 +266,10 @@ class PlaybackEngine(context: Context) {
             val wasPlaying = playing
             audioTrack?.pause()
             val ok = NativeBridge.nativeSeekUs(nativeHandle, positionUs)
-            audioTrack?.flush()
+            audioTrack?.flush() // also resets getPlaybackHeadPosition() to 0
+            baseHeadFrames = 0
             if (ok) {
                 basePositionUs = positionUs
-                bytesWrittenSinceBase = 0L
             }
             if (wasPlaying) {
                 audioTrack?.play()
@@ -275,8 +311,14 @@ class PlaybackEngine(context: Context) {
         handlerThread.quitSafely()
     }
 
-    private fun currentPositionUs(): Long =
-        basePositionUs + (bytesWrittenSinceBase * 1_000_000L / bytesPerSecond)
+    private fun currentPositionUs(): Long {
+        val track = audioTrack ?: return basePositionUs
+        // Plain Int subtraction wraps correctly modulo 2^32 even if the head position
+        // has overflowed since baseHeadFrames was captured, as long as the true delta
+        // fits in 31 bits (~13 hours at 44.1 kHz) - ample for one track's playback.
+        val deltaFrames = (track.playbackHeadPosition - baseHeadFrames).toLong()
+        return basePositionUs + (deltaFrames * 1_000_000L / targetSampleRate)
+    }
 
     private fun closeCurrentLocked() {
         if (nativeHandle != 0L) {
@@ -307,7 +349,6 @@ class PlaybackEngine(context: Context) {
                     decodeChunk.limit(n)
                     decodeChunk.position(0)
                     audioTrack?.write(decodeChunk, n, AudioTrack.WRITE_BLOCKING)
-                    bytesWrittenSinceBase += n
                     _state.value = _state.value.copy(positionUs = currentPositionUs())
                 }
             }
@@ -316,8 +357,7 @@ class PlaybackEngine(context: Context) {
     }
 
     companion object {
-        private const val OUT_CHANNELS = 2
-        private const val BYTES_PER_SAMPLE = 2 // 16-bit PCM
         private const val CHUNK_BYTES = 16384
+        private const val STEREO_CHANNELS = 2
     }
 }

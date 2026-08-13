@@ -25,10 +25,11 @@ import kotlin.math.roundToInt
 
 /**
  * Effects screen. Every control edits one [EffectsConfig], which is persisted and
- * handed to the engine; the ffmpeg half of it is rebuilt as a whole filter-graph
- * string rather than poked via `nativeSendFilterCommand`, because `superequalizer`
- * exposes no runtime commands. Rebuilds are debounced so a slider drag doesn't
- * reconfigure the graph on every pixel.
+ * handed to the engine. Most of the ffmpeg half is rebuilt as a whole filter-graph
+ * string, debounced so a slider drag doesn't reconfigure the graph on every pixel -
+ * except the 18 eq bands, which live-update the already-running `anequalizer` stage
+ * via `nativeSendFilterCommand` on every tick instead (see [EffectsFragment.pushBand]
+ * and `PlaybackEngine.applyEqBand`), since a full rebuild is audible as a click.
  */
 class EffectsFragment : Fragment() {
 
@@ -60,12 +61,7 @@ class EffectsFragment : Fragment() {
         bandRows = (0 until EQ_BAND_COUNT).map { index ->
             val row = ItemEqBandBinding.inflate(layoutInflater, binding.containerBands, true)
             row.textBandFreq.text = formatFrequency(EQ_FREQUENCIES[index])
-            row.seekBand.setOnSeekBarChangeListener(onSeek { progress ->
-                val db = bandDbOf(progress)
-                row.textBandValue.text = formatDb(db)
-                config = config.withBand(index, db)
-                syncPresetSpinner()
-            })
+            row.seekBand.setOnSeekBarChangeListener(onEqBandSeek(index, row))
             row
         }
 
@@ -186,10 +182,34 @@ class EffectsFragment : Fragment() {
         override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
     }
 
+    /**
+     * Same user-vs-programmatic guard as [onSeek], but pushes through [pushBand]
+     * instead of the debounced whole-graph [push] - see the class doc comment.
+     */
+    private fun onEqBandSeek(index: Int, row: ItemEqBandBinding) = object : SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+            if (updatingUi || !fromUser) return
+            val db = bandDbOf(progress)
+            row.textBandValue.text = formatDb(db)
+            config = config.withBand(index, db)
+            syncPresetSpinner()
+            pushBand(index, db)
+        }
+
+        override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+        override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+    }
+
     private fun push() {
         EffectsStore.update(config)
         binding.root.removeCallbacks(pushRunnable)
         binding.root.postDelayed(pushRunnable, PUSH_DEBOUNCE_MS)
+    }
+
+    /** No debounce, no graph rebuild - a direct `nativeSendFilterCommand` per tick. */
+    private fun pushBand(index: Int, db: Float) {
+        EffectsStore.update(config)
+        PlaybackController.get(requireContext()).applyEqBand(index, db)
     }
 
     private fun bandDbOf(progress: Int): Float = progress / BAND_STEPS_PER_DB - EQ_MAX_DB

@@ -2,9 +2,8 @@ package dev.libreamp.player.data.effects
 
 import java.util.Locale
 import kotlin.math.abs
-import kotlin.math.pow
 
-/** `superequalizer` is fixed at exactly 18 bands; these are its centre frequencies. */
+/** The 18 fixed centre frequencies the eq UI exposes, one `anequalizer` band each. */
 val EQ_FREQUENCIES = intArrayOf(
     65, 92, 131, 185, 262, 370, 523, 740, 1047,
     1480, 2093, 2960, 4186, 5920, 8372, 11840, 16744, 20000
@@ -15,6 +14,23 @@ const val EQ_MAX_DB = 12f
 const val BASS_TREBLE_MAX_DB = 20f
 const val MIN_SPEED = 0.25f
 const val MAX_SPEED = 2.0f
+
+/**
+ * Instance name given to the `anequalizer` stage in [EffectsConfig.toFilterGraph],
+ * so a single band's gain can be live-updated via `nativeSendFilterCommand` (see
+ * `PlaybackEngine.applyEqBand`) instead of tearing down and rebuilding the whole
+ * graph, which is audible as a click on every rebuild.
+ */
+const val EQ_FILTER_INSTANCE = "eq"
+
+/**
+ * Bandwidth (Hz) `anequalizer` gets for a band centred at [freqHz]. Used both when
+ * the graph is first built and by every later runtime `change` command, since the
+ * two drifting apart could make the live command behave unpredictably.
+ */
+fun eqBandWidth(freqHz: Int): Float = freqHz * EQ_BAND_WIDTH_RATIO
+
+private const val EQ_BAND_WIDTH_RATIO = 0.5f
 
 /**
  * The whole effects chain, in UI units (dB, playback rate, -1..+1 balance).
@@ -59,23 +75,34 @@ data class EffectsConfig(
         if (!enabled) return null
         val parts = mutableListOf<String>()
 
-        if ((0 until EQ_BAND_COUNT).any { abs(bandDb(it)) >= DB_EPSILON }) {
-            parts += (0 until EQ_BAND_COUNT).joinToString(":", prefix = "superequalizer=") { i ->
-                // superequalizer takes linear gain multipliers (0..20, 1 = flat), not dB.
-                val gain = 10.0.pow(bandDb(i) / 20.0).coerceIn(0.0, 20.0)
-                String.format(Locale.US, "%db=%.3f", i + 1, gain)
-            }
-        }
+        // Always present, even flat: PlaybackEngine.applyEqBand needs the stage to
+        // already exist in the running graph to live-update it band by band.
+        parts += eqFilterGraphPart()
         if (abs(bassDb) >= DB_EPSILON) parts += String.format(Locale.US, "bass=g=%.1f", bassDb)
         if (abs(trebleDb) >= DB_EPSILON) parts += String.format(Locale.US, "treble=g=%.1f", trebleDb)
         if (crossfeed) parts += "crossfeed"
         if (dynaudnorm) parts += "dynaudnorm"
 
-        return parts.takeIf { it.isNotEmpty() }?.joinToString(",")
+        return parts.joinToString(",")
+    }
+
+    /** One `c<channel> f=<hz> w=<hz> g=<db>` entry per band per channel, `|`-joined. */
+    private fun eqFilterGraphPart(): String {
+        val entries = (0 until OUT_CHANNELS).flatMap { channel ->
+            (0 until EQ_BAND_COUNT).map { i ->
+                val freq = EQ_FREQUENCIES[i]
+                // anequalizer's `g` is already in dB, unlike superequalizer's linear multiplier.
+                String.format(
+                    Locale.US, "c%d f=%d w=%.1f g=%.2f", channel, freq, eqBandWidth(freq), bandDb(i)
+                )
+            }
+        }
+        return "anequalizer@$EQ_FILTER_INSTANCE=" + entries.joinToString("|")
     }
 
     private companion object {
         const val DB_EPSILON = 0.05f
+        const val OUT_CHANNELS = 2
     }
 }
 

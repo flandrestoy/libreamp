@@ -18,8 +18,8 @@ Kotlin plus a ~700-line JNI bridge in C.
   `file://` path from the in-app filesystem picker.
 - No tests, no release signing config, no ProGuard/R8 (`isMinifyEnabled = false`).
 
-Development happens on a memory-constrained Android device (~964 MB RAM), which
-drives several of the constraints below.
+Development happens on a memory-constrained Android device, which drives
+several of the constraints below.
 
 ## 2. Building
 
