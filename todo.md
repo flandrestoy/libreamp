@@ -22,14 +22,25 @@ priority order; nothing here is started unless marked otherwise.
       offset) is saved to the `playlist_ui` prefs in `PlaylistFragment.onPause`
       and restored on the first list emission.
 - [x] **Make sorting and grouping one-off operations, not persistent modes.**
-      `SortKey`/`GroupKey` lost their MANUAL/NONE members; picking a sort or
-      group from the bottom-bar dialogs calls `PlaylistRepository.applySort` /
-      `applyGroup`, which renumber `manualOrderIndex` once. The list is now
+      The *behaviour* changed, not the UI shape: the bottom bar still toggles
+      exclusive SORTING/GROUPING/SELECTION modes (with the active button
+      highlighted), and sorting mode is still what enables manual drag-reorder.
+      What changed is that the dropdowns — now above the list, not in the bottom
+      bar — are one-shot triggers: they sit on a "Choose…" placeholder, and
+      picking an entry calls `PlaylistRepository.applySort`/`applyGroup`, which
+      renumber `manualOrderIndex` once, then snap back to the placeholder.
+      `SortKey`/`GroupKey` lost their MANUAL/NONE members; the list is now
       *always* displayed in stored manual order. `applyManualMove` falls back to
       a full renumber when the neighbour gap is exhausted.
 - [x] **Track numbers** shown per row (position in the list, 1-based).
-- [x] **Draggable scrollbar** — RecyclerView's built-in fast scroller
-      (`app:fastScrollEnabled` + thumb/track drawables).
+- [x] **Draggable scrollbar** — custom `FastScrollBar` view overlaying the right
+      edge of the list. RecyclerView's built-in fast scroller was tried first and
+      is not practically grabbable: it only accepts a drag inside a strip as wide
+      as the thumb drawable's intrinsic width, and only within ~1.5s of the last
+      scroll (it auto-hides). `FastScrollBar` stays visible while the list
+      overflows, takes a touch anywhere across its 22dp width within the thumb's
+      vertical span (plus slop), and passes any other touch through to the row
+      underneath so the drag handles in the same corner still work.
 - [x] **Highlight the currently playing track** — the adapter takes a
       `nowPlayingId` from the engine's state and sets `isActivated` on the row.
 

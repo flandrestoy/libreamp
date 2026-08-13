@@ -48,17 +48,76 @@
             android:tint="@android:color/white" />
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_playlist"
+    <!-- Sorting/grouping controls sit under the toolbar, next to the list they act on. -->
+    <LinearLayout
+        android:id="@+id/row_sort_by"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="10dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hint_sort_by"
+            android:textColor="@android:color/white" />
+
+        <Spinner
+            android:id="@+id/spinner_sort_by"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row_group_by"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="10dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hint_group_by"
+            android:textColor="@android:color/white" />
+
+        <Spinner
+            android:id="@+id/spinner_group_by"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        app:fastScrollEnabled="true"
-        app:fastScrollHorizontalThumbDrawable="@drawable/fast_scroll_thumb"
-        app:fastScrollHorizontalTrackDrawable="@drawable/fast_scroll_track"
-        app:fastScrollVerticalThumbDrawable="@drawable/fast_scroll_thumb"
-        app:fastScrollVerticalTrackDrawable="@drawable/fast_scroll_track" />
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_playlist"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false" />
+
+        <dev.libreamp.player.ui.playlist.FastScrollBar
+            android:id="@+id/fast_scroll_bar"
+            android:layout_width="22dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end" />
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/bottom_bar"

@@ -5,7 +5,7 @@
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:paddingStart="12dp"
-    android:paddingEnd="16dp"
+    android:paddingEnd="26dp"
     android:paddingTop="10dp"
     android:paddingBottom="10dp"
     android:background="@drawable/playlist_row_background">

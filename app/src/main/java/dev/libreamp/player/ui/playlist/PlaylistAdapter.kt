@@ -22,7 +22,14 @@ class PlaylistAdapter(
     private val selectedIds = mutableSetOf<Long>()
     private val artCache = object : LruCache<String, Bitmap>(ART_CACHE_SLOTS) {}
 
-    var dragEnabled: Boolean = true
+    /** Drives drag-handle visibility, so a change has to re-bind the rows. */
+    var dragEnabled: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            notifyDataSetChanged()
+        }
+
     var multiSelectMode: Boolean = false
         set(value) {
             field = value

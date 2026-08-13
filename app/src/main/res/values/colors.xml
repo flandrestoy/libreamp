@@ -2,4 +2,8 @@
 <resources>
     <!-- Currently-playing playlist row: colorAccent at ~20% so it reads on both themes. -->
     <color name="now_playing_highlight">#33D0BCFF</color>
+
+    <color name="fast_scroll_track">#14808080</color>
+    <color name="fast_scroll_thumb">#996750A4</color>
+    <color name="fast_scroll_thumb_active">#FFD0BCFF</color>
 </resources>

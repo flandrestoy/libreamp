@@ -8,7 +8,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.appcompat.app.AlertDialog
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
@@ -18,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.activity.result.contract.ActivityResultContracts
 import dev.libreamp.player.R
 import dev.libreamp.player.data.db.GroupKey
@@ -63,13 +65,20 @@ class PlaylistFragment : Fragment() {
     private lateinit var adapter: PlaylistAdapter
     private lateinit var touchHelper: ItemTouchHelper
 
-    /** Only removal is a mode now — sorting and grouping are one-shot dialogs. */
-    private enum class Mode { NORMAL, SELECTION }
+    /** Removal, sorting and grouping are mutually exclusive UI modes, toggled by the bottom bar. */
+    private enum class Mode { NORMAL, SELECTION, SORTING, GROUPING }
     private var mode: Mode = Mode.NORMAL
 
     private var searchOpen = false
     private var scrollRestored = false
     private var pendingCenterOnNowPlaying = false
+
+    /**
+     * The dropdowns are one-shot triggers, not state: they sit on a "choose" placeholder
+     * and snap back to it after firing, so these guard the reset from re-firing.
+     */
+    private var suppressSortCallback = false
+    private var suppressGroupCallback = false
 
     private val prefs by lazy {
         requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -99,12 +108,13 @@ class PlaylistFragment : Fragment() {
 
         adapter = PlaylistAdapter(
             onClick = { entry -> playEntry(entry) },
-            onLongPress = { if (mode != Mode.SELECTION) toggleSelectionMode() },
+            onLongPress = { if (mode != Mode.SELECTION) toggleMode(Mode.SELECTION) },
             onSelectionToggled = { _, _ -> },
             onStartDrag = { holder -> touchHelper.startDrag(holder) }
         )
         binding.recyclerPlaylist.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerPlaylist.adapter = adapter
+        binding.fastScrollBar.attachTo(binding.recyclerPlaylist)
 
         touchHelper = ItemTouchHelper(
             PlaylistTouchCallback(adapter) { from, to -> onDragFinished(from, to) }
@@ -116,16 +126,19 @@ class PlaylistFragment : Fragment() {
         binding.btnAdd.setOnClickListener {
             pickFilesLauncher.launch(Intent(requireContext(), FilePickerActivity::class.java))
         }
-        binding.btnRemove.setOnClickListener { toggleSelectionMode() }
+        binding.btnRemove.setOnClickListener { toggleMode(Mode.SELECTION) }
         binding.btnSearch.setOnClickListener { if (searchOpen) closeSearch() else openSearch() }
-        binding.btnSort.setOnClickListener { showSortDialog() }
-        binding.btnGroup.setOnClickListener { showGroupDialog() }
+        binding.btnSort.setOnClickListener { toggleMode(Mode.SORTING) }
+        binding.btnGroup.setOnClickListener { toggleMode(Mode.GROUPING) }
         binding.btnCloseSearch.setOnClickListener { closeSearch() }
 
         binding.editSearch.doOnTextChanged { text, _, _, _ ->
             viewModel.setSearchQuery(text?.toString().orEmpty())
             recomputeDragEnabled()
         }
+
+        setUpSortSpinner()
+        setUpGroupSpinner()
 
         // The view can be recreated under a surviving fragment (pager offscreen limit),
         // so re-project the retained mode onto the fresh widgets and restore scroll again.
@@ -141,6 +154,7 @@ class PlaylistFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.visibleEntries.collect { list ->
                     adapter.submitList(list)
+                    binding.fastScrollBar.invalidate()
                     if (!scrollRestored && list.isNotEmpty()) {
                         scrollRestored = true
                         restoreScrollPosition()
@@ -164,30 +178,55 @@ class PlaylistFragment : Fragment() {
         saveScrollPosition()
     }
 
-    // ---- sorting / grouping (one-off rewrites of the stored order) ----
+    // ---- sorting / grouping: one-off rewrites of the stored order ----
 
-    private fun showSortDialog() {
-        val keys = SortKey.values()
-        val labels = keys.map { it.label(requireContext()) } + getString(R.string.sort_reverse)
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.action_sort)
-            .setItems(labels.toTypedArray()) { _, which ->
-                if (which == keys.size) viewModel.reverseOrder() else viewModel.applySort(keys[which])
+    /** Placeholder first, then the keys, then the reverse action. */
+    private fun setUpSortSpinner() {
+        val labels = listOf(getString(R.string.action_choose)) +
+            SortKey.values().map { it.label(requireContext()) } +
+            getString(R.string.sort_reverse)
+        binding.spinnerSortBy.adapter = spinnerAdapter(labels)
+        binding.spinnerSortBy.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (suppressSortCallback || position == 0) return
+                val keys = SortKey.values()
+                if (position == keys.size + 1) viewModel.reverseOrder()
+                else viewModel.applySort(keys[position - 1])
                 announceOrderChanged()
+                resetSpinner(binding.spinnerSortBy) { suppressSortCallback = it }
             }
-            .show()
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
     }
 
-    private fun showGroupDialog() {
-        val keys = GroupKey.values()
-        val labels = keys.map { it.label(requireContext()) }
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.action_group)
-            .setItems(labels.toTypedArray()) { _, which ->
-                viewModel.applyGroup(keys[which])
+    private fun setUpGroupSpinner() {
+        val labels = listOf(getString(R.string.action_choose)) +
+            GroupKey.values().map { it.label(requireContext()) }
+        binding.spinnerGroupBy.adapter = spinnerAdapter(labels)
+        binding.spinnerGroupBy.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (suppressGroupCallback || position == 0) return
+                viewModel.applyGroup(GroupKey.values()[position - 1])
                 announceOrderChanged()
+                resetSpinner(binding.spinnerGroupBy) { suppressGroupCallback = it }
             }
-            .show()
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
+    }
+
+    private fun spinnerAdapter(labels: List<String>) = ArrayAdapter(
+        requireContext(), android.R.layout.simple_spinner_item, labels
+    ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+
+    /** Posted, because Spinner ignores a selection change made from inside its own callback. */
+    private fun resetSpinner(spinner: android.widget.Spinner, setSuppressed: (Boolean) -> Unit) {
+        spinner.post {
+            setSuppressed(true)
+            spinner.setSelection(0, false)
+            setSuppressed(false)
+        }
     }
 
     /** Sort/group are destructive one-shots, so say so rather than leaving it ambiguous. */
@@ -241,7 +280,7 @@ class PlaylistFragment : Fragment() {
 
     private fun saveScrollPosition() {
         val position = layoutManager.findFirstVisibleItemPosition()
-        if (position == androidx.recyclerview.widget.RecyclerView.NO_POSITION) return
+        if (position == RecyclerView.NO_POSITION) return
         val offset = layoutManager.findViewByPosition(position)?.top ?: 0
         prefs.edit()
             .putInt(KEY_SCROLL_POSITION, position)
@@ -255,7 +294,7 @@ class PlaylistFragment : Fragment() {
         layoutManager.scrollToPositionWithOffset(position, prefs.getInt(KEY_SCROLL_OFFSET, 0))
     }
 
-    // ---- playback / selection ----
+    // ---- playback / modes ----
 
     private fun playEntry(entry: PlaylistEntryEntity) {
         val ctx = requireContext()
@@ -276,14 +315,15 @@ class PlaylistFragment : Fragment() {
     private fun onToolbarItem(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_delete_selected) {
             viewModel.deleteEntries(adapter.selectedEntries())
-            toggleSelectionMode()
+            toggleMode(Mode.SELECTION)
             return true
         }
         return false
     }
 
-    private fun toggleSelectionMode() {
-        mode = if (mode == Mode.SELECTION) Mode.NORMAL else Mode.SELECTION
+    /** Tapping the active mode's button again returns to NORMAL; the three action modes are exclusive. */
+    private fun toggleMode(target: Mode) {
+        mode = if (mode == target) Mode.NORMAL else target
         adapter.multiSelectMode = (mode == Mode.SELECTION)
         recomputeDragEnabled()
         updateBottomBarForMode()
@@ -291,15 +331,20 @@ class PlaylistFragment : Fragment() {
     }
 
     /**
-     * Manual reordering is meaningless while the list is filtered — the visible
-     * neighbours the drop is resolved against would not be the real ones.
+     * Manual reordering belongs to sorting mode, and is meaningless while the list is
+     * filtered — the visible neighbours the drop is resolved against would not be the
+     * real ones.
      */
     private fun recomputeDragEnabled() {
-        adapter.dragEnabled = mode != Mode.SELECTION && viewModel.searchQuery.value.isBlank()
+        adapter.dragEnabled = mode == Mode.SORTING && viewModel.searchQuery.value.isBlank()
     }
 
     private fun updateBottomBarForMode() {
         binding.btnRemove.isActivated = mode == Mode.SELECTION
+        binding.btnSort.isActivated = mode == Mode.SORTING
+        binding.btnGroup.isActivated = mode == Mode.GROUPING
+        binding.rowSortBy.visibility = if (mode == Mode.SORTING) View.VISIBLE else View.GONE
+        binding.rowGroupBy.visibility = if (mode == Mode.GROUPING) View.VISIBLE else View.GONE
     }
 
     private fun updateToolbarForSelection() {
