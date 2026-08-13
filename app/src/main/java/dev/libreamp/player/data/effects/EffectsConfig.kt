@@ -49,15 +49,10 @@ data class EffectsConfig(
     val enabled: Boolean = false,
     val bandsDb: List<Float> = List(EQ_BAND_COUNT) { 0f },
     val preset: String = EqPresets.FLAT,
-    val crossfeed: Boolean = false,
-    val dynaudnorm: Boolean = false,
-    val compressor: Boolean = false,
-    val limiter: Boolean = false,
-    val loudnorm: Boolean = false,
-    val echo: Boolean = false,
-    val stereoTools: Boolean = false,
-    val extraStereo: Boolean = false,
-    val pulsator: Boolean = false,
+    /** [EffectSpec.id]s of the optional filters that are switched on. */
+    val activeEffects: Set<String> = emptySet(),
+    /** [EffectSpec.paramKey] -> slider value; anything absent uses the param default. */
+    val params: Map<String, Float> = emptyMap(),
     val speed: Float = 1f,
     val balance: Float = 0f
 ) {
@@ -69,6 +64,18 @@ data class EffectsConfig(
         bands[index] = db
         return copy(bandsDb = bands, preset = EqPresets.CUSTOM)
     }
+
+    fun isActive(spec: EffectSpec): Boolean = spec.id in activeEffects
+
+    fun withActive(spec: EffectSpec, active: Boolean): EffectsConfig = copy(
+        activeEffects = if (active) activeEffects + spec.id else activeEffects - spec.id
+    )
+
+    fun paramValue(spec: EffectSpec, param: EffectParam): Float =
+        params[spec.paramKey(param)] ?: param.default
+
+    fun withParam(spec: EffectSpec, param: EffectParam, value: Float): EffectsConfig =
+        copy(params = params + (spec.paramKey(param) to value))
 
     val effectiveSpeed: Float get() = if (enabled) speed.coerceIn(MIN_SPEED, MAX_SPEED) else 1f
 
@@ -88,15 +95,11 @@ data class EffectsConfig(
         // Always present, even flat: PlaybackEngine.applyEqBand needs the stage to
         // already exist in the running graph to live-update it band by band.
         parts += eqFilterGraphPart()
-        if (crossfeed) parts += "crossfeed"
-        if (dynaudnorm) parts += "dynaudnorm"
-        if (compressor) parts += "acompressor"
-        if (limiter) parts += "alimiter"
-        if (loudnorm) parts += "loudnorm"
-        if (echo) parts += "aecho"
-        if (stereoTools) parts += "stereotools"
-        if (extraStereo) parts += "extrastereo"
-        if (pulsator) parts += "apulsator"
+        for (spec in EFFECT_SPECS) {
+            if (!isActive(spec)) continue
+            val args = spec.params.joinToString(":") { it.render(paramValue(spec, it)) }
+            parts += "${spec.id}=$args"
+        }
 
         return parts.joinToString(",")
     }

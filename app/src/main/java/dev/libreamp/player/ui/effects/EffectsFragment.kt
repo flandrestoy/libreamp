@@ -7,16 +7,21 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.SeekBar
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import dev.libreamp.player.R
+import dev.libreamp.player.data.effects.EFFECT_SPECS
 import dev.libreamp.player.data.effects.EQ_BAND_COUNT
 import dev.libreamp.player.data.effects.EQ_FREQUENCIES
 import dev.libreamp.player.data.effects.EQ_MAX_DB
+import dev.libreamp.player.data.effects.EffectSpec
 import dev.libreamp.player.data.effects.EffectsConfig
 import dev.libreamp.player.data.effects.EffectsStore
 import dev.libreamp.player.data.effects.EqPresets
 import dev.libreamp.player.data.effects.MIN_SPEED
 import dev.libreamp.player.databinding.FragmentEffectsBinding
+import dev.libreamp.player.databinding.ItemEffectBinding
+import dev.libreamp.player.databinding.ItemEffectParamBinding
 import dev.libreamp.player.databinding.ItemEqBandBinding
 import dev.libreamp.player.playback.PlaybackController
 import java.util.Locale
@@ -36,7 +41,15 @@ class EffectsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var bandRows: List<ItemEqBandBinding>
+    private lateinit var effectRows: List<EffectRow>
     private var config = EffectsConfig()
+
+    /** One optional filter's switch plus the sliders for its params. */
+    private class EffectRow(
+        val spec: EffectSpec,
+        val binding: ItemEffectBinding,
+        val paramRows: List<ItemEffectParamBinding>
+    )
 
     /** Guards the listeners while controls are being populated from [config]. */
     private var updatingUi = false
@@ -104,67 +117,49 @@ class EffectsFragment : Fragment() {
             config = config.copy(balance = balance)
         })
 
-        binding.switchCrossfeed.setOnCheckedChangeListener { _, checked ->
+        effectRows = EFFECT_SPECS.map { spec -> buildEffectRow(spec) }
+
+        bindAll()
+    }
+
+    /** Inflates one effect's switch and its param sliders, and wires both to [config]. */
+    private fun buildEffectRow(spec: EffectSpec): EffectRow {
+        val row = ItemEffectBinding.inflate(layoutInflater, binding.containerEffects, true)
+        row.switchEffect.setText(spec.labelRes)
+        row.switchEffect.setOnCheckedChangeListener { _, checked ->
             if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(crossfeed = checked)
-            push()
-        }
-        binding.switchDynaudnorm.setOnCheckedChangeListener { _, checked ->
-            if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(dynaudnorm = checked)
-            push()
-        }
-        binding.switchCompressor.setOnCheckedChangeListener { _, checked ->
-            if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(compressor = checked)
-            push()
-        }
-        binding.switchLimiter.setOnCheckedChangeListener { _, checked ->
-            if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(limiter = checked)
-            push()
-        }
-        binding.switchLoudnorm.setOnCheckedChangeListener { _, checked ->
-            if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(loudnorm = checked)
-            push()
-        }
-        binding.switchEcho.setOnCheckedChangeListener { _, checked ->
-            if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(echo = checked)
-            push()
-        }
-        binding.switchStereoTools.setOnCheckedChangeListener { _, checked ->
-            if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(stereoTools = checked)
-            push()
-        }
-        binding.switchExtraStereo.setOnCheckedChangeListener { _, checked ->
-            if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(extraStereo = checked)
-            push()
-        }
-        binding.switchPulsator.setOnCheckedChangeListener { _, checked ->
-            if (updatingUi) return@setOnCheckedChangeListener
-            config = config.copy(pulsator = checked)
+            config = config.withActive(spec, checked)
+            row.containerParams.isVisible = checked
             push()
         }
 
-        bindAll()
+        val paramRows = spec.params.map { param ->
+            val paramRow = ItemEffectParamBinding.inflate(layoutInflater, row.containerParams, true)
+            paramRow.textParamLabel.setText(param.labelRes)
+            paramRow.seekParam.max = param.steps
+            paramRow.seekParam.setOnSeekBarChangeListener(onSeek { progress ->
+                val value = param.valueOf(progress)
+                paramRow.textParamValue.text = param.format(value)
+                config = config.withParam(spec, param, value)
+            })
+            paramRow
+        }
+        return EffectRow(spec, row, paramRows)
     }
 
     private fun bindAll() {
         updatingUi = true
         binding.switchEnabled.isChecked = config.enabled
-        binding.switchCrossfeed.isChecked = config.crossfeed
-        binding.switchDynaudnorm.isChecked = config.dynaudnorm
-        binding.switchCompressor.isChecked = config.compressor
-        binding.switchLimiter.isChecked = config.limiter
-        binding.switchLoudnorm.isChecked = config.loudnorm
-        binding.switchEcho.isChecked = config.echo
-        binding.switchStereoTools.isChecked = config.stereoTools
-        binding.switchExtraStereo.isChecked = config.extraStereo
-        binding.switchPulsator.isChecked = config.pulsator
+        effectRows.forEach { row ->
+            val active = config.isActive(row.spec)
+            row.binding.switchEffect.isChecked = active
+            row.binding.containerParams.isVisible = active
+            row.spec.params.forEachIndexed { index, param ->
+                val value = config.paramValue(row.spec, param)
+                row.paramRows[index].seekParam.progress = param.progressOf(value)
+                row.paramRows[index].textParamValue.text = param.format(value)
+            }
+        }
 
         binding.seekSpeed.progress = ((config.speed - MIN_SPEED) * SPEED_STEPS_PER_UNIT).roundToInt()
         binding.textSpeedValue.text = String.format(Locale.US, "%.2fx", config.speed)
