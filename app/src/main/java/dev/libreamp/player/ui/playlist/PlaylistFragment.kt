@@ -56,6 +56,7 @@ private fun GroupKey.label(context: Context): String = context.getString(
         GroupKey.ALBUM -> R.string.group_album
         GroupKey.MEDIA_TYPE -> R.string.group_media_type
         GroupKey.FORMAT -> R.string.group_format
+        GroupKey.FOLDER -> R.string.group_folder
     }
 )
 
@@ -277,10 +278,21 @@ class PlaylistFragment : Fragment() {
             submenu.add(Menu.NONE, index, index, key.label(requireContext()))
         }
 
+        // Nothing to open or shut when the list has no groups in it yet.
+        val hasGroups = viewModel.hasGroups()
+        menu.menu.add(Menu.NONE, COLLAPSE_ALL_ID, 2, getString(R.string.menu_collapse_all))
+            .isEnabled = hasGroups
+        menu.menu.add(Menu.NONE, EXPAND_ALL_ID, 3, getString(R.string.menu_expand_all))
+            .isEnabled = hasGroups
+
         menu.setOnMenuItemClickListener { item ->
             if (item.hasSubMenu()) return@setOnMenuItemClickListener false
-            if (item.itemId == GROUP_SELECTED_ID) promptForNewGroup(selection)
-            else viewModel.autoGroup(GroupKey.values()[item.itemId], groupingScope())
+            when (item.itemId) {
+                GROUP_SELECTED_ID -> promptForNewGroup(selection)
+                COLLAPSE_ALL_ID -> viewModel.setAllCollapsed(true)
+                EXPAND_ALL_ID -> viewModel.setAllCollapsed(false)
+                else -> viewModel.autoGroup(GroupKey.values()[item.itemId], groupingScope())
+            }
             true
         }
         menu.show()
@@ -519,6 +531,8 @@ class PlaylistFragment : Fragment() {
         const val GROUP_SELECT_ID = 104
         const val GROUP_UNGROUP_ID = 105
         const val GROUP_DELETE_ID = 106
+        const val COLLAPSE_ALL_ID = 107
+        const val EXPAND_ALL_ID = 108
         const val SUBMENU_ID = 200
     }
 }

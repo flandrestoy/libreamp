@@ -46,6 +46,7 @@
     <string name="group_album">Album</string>
     <string name="group_media_type">Media type</string>
     <string name="group_format">File format</string>
+    <string name="group_folder">Parent folder</string>
     <string name="action_group_menu">Group options</string>
     <string name="group_default_label">New group</string>
     <string name="group_meta">%1$s · %2$s</string>
@@ -58,6 +59,8 @@
     <string name="menu_group_selected">Group selected tracks…</string>
     <string name="menu_auto_group">Auto-group by</string>
     <string name="menu_sort_whole_list">Sort whole list by</string>
+    <string name="menu_collapse_all">Collapse all groups</string>
+    <string name="menu_expand_all">Expand all groups</string>
     <string name="menu_group_rename">Rename group…</string>
     <string name="menu_group_sort">Sort inside group by</string>
     <string name="menu_group_reverse">Reverse inside group</string>

@@ -68,6 +68,8 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
     /** Every track in view order — what "no selection" means for a whole-list command. */
     fun allTracks(): List<PlaylistEntryEntity> = visibleItems.value.flatten()
 
+    fun hasGroups(): Boolean = visibleItems.value.any { it is PlaylistItem.Group }
+
     fun applySort(key: SortKey, groupId: Long? = null) {
         viewModelScope.launch { repository.applySort(key, groupId) }
     }
@@ -90,6 +92,10 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
 
     fun setCollapsed(groupId: Long, collapsed: Boolean) {
         viewModelScope.launch { repository.setCollapsed(groupId, collapsed) }
+    }
+
+    fun setAllCollapsed(collapsed: Boolean) {
+        viewModelScope.launch { repository.setAllCollapsed(collapsed) }
     }
 
     fun dissolveGroup(groupId: Long) {

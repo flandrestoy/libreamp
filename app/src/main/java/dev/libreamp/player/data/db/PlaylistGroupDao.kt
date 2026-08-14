@@ -27,6 +27,10 @@ interface PlaylistGroupDao {
     @Update
     suspend fun updateAll(groups: List<PlaylistGroupEntity>)
 
+    /** Expand/collapse all: one statement, so the list settles in a single emission. */
+    @Query("UPDATE playlist_groups SET collapsed = :collapsed")
+    suspend fun setAllCollapsed(collapsed: Boolean)
+
     @Query("DELETE FROM playlist_groups WHERE id IN (:ids)")
     suspend fun deleteByIds(ids: List<Long>)
 }

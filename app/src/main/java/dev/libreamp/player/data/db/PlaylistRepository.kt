@@ -158,6 +158,8 @@ class PlaylistRepository(context: Context) {
         groupDao.update(group.copy(collapsed = collapsed))
     }
 
+    suspend fun setAllCollapsed(collapsed: Boolean) = groupDao.setAllCollapsed(collapsed)
+
     /** Dissolves the group: its tracks stay exactly where they are and become loose. */
     suspend fun dissolveGroup(groupId: Long) = db.withTransaction {
         val rebuilt = tree().flatMap { item ->

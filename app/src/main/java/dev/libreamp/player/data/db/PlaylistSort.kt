@@ -1,5 +1,6 @@
 package dev.libreamp.player.data.db
 
+import android.net.Uri
 import java.util.Locale
 
 /**
@@ -13,8 +14,13 @@ enum class SortKey { TITLE, ARTIST, ALBUM, DURATION, DATE_ADDED, LAST_MODIFIED }
 private val SortKey.isTextual: Boolean
     get() = this == SortKey.TITLE || this == SortKey.ARTIST || this == SortKey.ALBUM
 
-/** The metadata an auto-group command buckets by. Each bucket becomes a real, editable group. */
-enum class GroupKey { ARTIST, ALBUM, MEDIA_TYPE, FORMAT }
+/**
+ * What an auto-group command buckets by. Each bucket becomes a real, editable group.
+ * [FOLDER] reads the file's own location rather than its tags — which is often the only
+ * grouping that survives a library with patchy metadata, and matches how the files were
+ * picked in the first place.
+ */
+enum class GroupKey { ARTIST, ALBUM, MEDIA_TYPE, FORMAT, FOLDER }
 
 fun List<PlaylistEntryEntity>.orderedBy(sort: SortKey): List<PlaylistEntryEntity> {
     val comparator: Comparator<PlaylistEntryEntity> = when (sort) {
@@ -72,6 +78,25 @@ fun PlaylistEntryEntity.groupLabelFor(key: GroupKey): String = when (key) {
     }
     GroupKey.FORMAT -> displayName.substringAfterLast('.', "")
         .takeIf { it.isNotBlank() }?.uppercase(Locale.US) ?: UNKNOWN_FORMAT
+    GroupKey.FOLDER -> parentFolderName() ?: UNKNOWN_FOLDER
+}
+
+/**
+ * The name of the directory the file sits in, dug out of the stored Uri.
+ *
+ * Both shapes the pickers produce end in a path. A file:// Uri carries one directly; a SAF
+ * document Uri carries its document id as the last segment — "primary:Music/Album/track.mp3"
+ * — already percent-decoded by [Uri.getLastPathSegment]. The storage-root prefix ahead of
+ * the colon is not part of the path, so it goes first; what remains is the path, and the
+ * folder is the segment before the filename.
+ *
+ * Null for a file sitting at the root of its volume, which has no parent to name.
+ */
+private fun PlaylistEntryEntity.parentFolderName(): String? {
+    val uri = Uri.parse(contentUri)
+    val path = (if (uri.scheme == "file") uri.path else uri.lastPathSegment) ?: return null
+    val segments = path.substringAfterLast(':').split('/').filter { it.isNotBlank() }
+    return segments.getOrNull(segments.size - 2)
 }
 
 /** Buckets for an auto-group run, in the alphabetical order the new groups will take. */
@@ -95,3 +120,4 @@ private val WHITESPACE = Regex("\\s+")
 private const val UNKNOWN_ARTIST = "Unknown Artist"
 private const val UNKNOWN_ALBUM = "Unknown Album"
 private const val UNKNOWN_FORMAT = "Unknown Format"
+private const val UNKNOWN_FOLDER = "Unknown Folder"
