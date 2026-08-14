@@ -4,23 +4,23 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.ColorFilter
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import dev.libreamp.player.R
 import kotlin.math.hypot
 
 /**
- * Stand-in for a missing cover: diagonal hatching with a centred mark.
+ * Stand-in for a missing cover: diagonal hatching with the centred 厶 mark.
  *
  * The hatch pitch is fixed in dp rather than scaled with the box, so the 42dp
  * playlist thumbnails and the full-width Now Playing panel read as the same
  * material instead of one looking like a zoom of the other.
  *
- * The mark is drawn as a path rather than set as text. The design uses a CJK
- * glyph, and a device without a CJK font would render tofu in a placeholder
- * whose whole job is to look deliberate.
+ * The mark comes from @drawable/ic_logo_mu, which carries the real Noto Sans JP
+ * outline. Drawing it from a bundled font instead would work, but the same mark
+ * is the launcher icon, where only a drawable will do.
  */
 class HatchDrawable(context: Context, private val small: Boolean = false) : Drawable() {
 
@@ -35,17 +35,16 @@ class HatchDrawable(context: Context, private val small: Boolean = false) : Draw
             if (small) R.color.art_hatch_light_small else R.color.art_hatch_light
         )
     }
-    private val markPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeCap = Paint.Cap.BUTT
-        strokeJoin = Paint.Join.MITER
-        color = ContextCompat.getColor(
-            context, if (small) R.color.art_glyph_small else R.color.art_glyph
-        )
-    }
-
     private val pitch = (if (small) STRIPE_SMALL_DP else STRIPE_LARGE_DP) * density
-    private val mark = Path()
+
+    private val mark = AppCompatResources.getDrawable(context, R.drawable.ic_logo_mu)?.mutate()
+        ?.apply {
+            setTint(
+                ContextCompat.getColor(
+                    context, if (small) R.color.art_glyph_small else R.color.art_glyph
+                )
+            )
+        }
 
     override fun draw(canvas: Canvas) {
         val bounds = bounds
@@ -66,43 +65,28 @@ class HatchDrawable(context: Context, private val small: Boolean = false) : Draw
         }
         canvas.restore()
 
-        drawMark(canvas, cx, cy, minOf(bounds.width(), bounds.height()) * MARK_SCALE)
-    }
-
-    /**
-     * Two strokes: a shoulder falling to the left, and a base sweeping back to
-     * the right past it.
-     */
-    private fun drawMark(canvas: Canvas, cx: Float, cy: Float, size: Float) {
-        markPaint.strokeWidth = size * STROKE_RATIO
-        val half = size / 2f
-        mark.reset()
-        mark.moveTo(cx + half * 0.62f, cy - half)
-        mark.cubicTo(
-            cx + half * 0.10f, cy - half * 0.30f,
-            cx - half * 0.42f, cy + half * 0.18f,
-            cx - half * 0.78f, cy + half * 0.52f
+        val glyph = mark ?: return
+        val size = (minOf(bounds.width(), bounds.height()) *
+            (if (small) MARK_SCALE_SMALL else MARK_SCALE)).toInt()
+        val half = size / 2
+        glyph.setBounds(
+            (cx - half).toInt(), (cy - half).toInt(),
+            (cx - half).toInt() + size, (cy - half).toInt() + size
         )
-        mark.moveTo(cx - half * 0.72f, cy + half * 0.30f)
-        mark.cubicTo(
-            cx - half * 0.10f, cy + half * 0.52f,
-            cx + half * 0.42f, cy + half * 0.72f,
-            cx + half * 0.80f, cy + half * 0.92f
-        )
-        canvas.drawPath(mark, markPaint)
+        glyph.draw(canvas)
     }
 
     override fun setAlpha(alpha: Int) {
         basePaint.alpha = alpha
         stripePaint.alpha = alpha
-        markPaint.alpha = alpha
+        mark?.alpha = alpha
         invalidateSelf()
     }
 
     override fun setColorFilter(colorFilter: ColorFilter?) {
         basePaint.colorFilter = colorFilter
         stripePaint.colorFilter = colorFilter
-        markPaint.colorFilter = colorFilter
+        mark?.colorFilter = colorFilter
         invalidateSelf()
     }
 
@@ -112,7 +96,9 @@ class HatchDrawable(context: Context, private val small: Boolean = false) : Draw
     private companion object {
         const val STRIPE_LARGE_DP = 8f
         const val STRIPE_SMALL_DP = 6f
-        const val MARK_SCALE = 0.42f
-        const val STROKE_RATIO = 0.13f
+
+        /** Thumbnails carry the mark proportionally larger, as the design does. */
+        const val MARK_SCALE = 0.36f
+        const val MARK_SCALE_SMALL = 0.46f
     }
 }

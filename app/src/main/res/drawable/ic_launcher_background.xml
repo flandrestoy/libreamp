@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#4F378B" />
-</shape>
+<!--
+  Near-black, matching the shell the app actually opens into, so the orange
+  mark carries the identity. Full-bleed flat colour: adaptive icons are masked
+  and parallaxed, and the placeholder's diagonal hatch reads as noise once the
+  icon is down at launcher size.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="@color/surface"
+        android:pathData="M0,0h108v108h-108z" />
+</vector>

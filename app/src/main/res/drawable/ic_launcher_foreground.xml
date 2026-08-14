@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Same outline as @drawable/ic_logo_mu, sized inside the 66dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,24 C38.5,24 26,36.5 26,52 C26,67.5 38.5,80 54,80 C69.5,80 82,67.5 82,52 C82,36.5 69.5,24 54,24 Z M54,72 C42.95,72 34,63.05 34,52 C34,40.95 42.95,32 54,32 C65.05,32 74,40.95 74,52 C74,63.05 65.05,72 54,72 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M50,40 L50,58.5 C48.6,57.6 46.9,57 45,57 C40.6,57 37,60.1 37,64 C37,67.9 40.6,71 45,71 C49.4,71 53,67.9 53,64 L53,46 L63,46 L63,40 Z" />
+    <path android:pathData="M47.58 29.59 55.5 30.98Q54.19 36.19 52.6 41.65Q51 47.12 49.25 52.45Q47.5 57.78 45.68 62.61Q43.86 67.45 42.15 71.4L35.77 69.83Q37.45 65.77 39.17 60.8Q40.88 55.84 42.47 50.47Q44.06 45.11 45.37 39.75Q46.69 34.39 47.58 29.59ZM29.16 67.83Q33.28 67.71 38.42 67.49Q43.56 67.28 49.26 67.02Q54.96 66.77 60.88 66.48Q66.8 66.2 72.51 65.91L72.23 72.71Q66.6 73.08 60.86 73.43Q55.11 73.79 49.57 74.11Q44.03 74.42 39.05 74.69Q34.07 74.97 29.97 75.17ZM58.74 54.59 65.38 52.02Q67.38 54.77 69.36 57.82Q71.33 60.86 73.11 63.97Q74.89 67.08 76.37 69.96Q77.84 72.84 78.84 75.28L71.73 78.41Q70.86 75.98 69.46 73Q68.07 70.02 66.29 66.81Q64.5 63.6 62.58 60.46Q60.65 57.33 58.74 54.59Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="30"
+                android:endX="0"
+                android:endY="78"
+                android:startColor="@color/accent_grad_top"
+                android:endColor="@color/accent_grad_bottom" />
+        </aapt:attr>
+    </path>
 </vector>

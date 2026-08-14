@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The 厶 mark: the real Noto Sans JP outline at weight 700, not a redrawing.
+
+  Baked to a path rather than set as text in a bundled font, because the mark
+  is also the launcher icon, and an adaptive icon foreground has to be a
+  drawable. One outline serves both, and no device can miss the glyph and draw
+  tofu in its place.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M37.08 0.86 53.03 3.66Q50.39 14.14 47.18 25.14Q43.97 36.14 40.44 46.87Q36.92 57.61 33.25 67.34Q29.59 77.07 26.15 85.01L13.31 81.87Q16.69 73.69 20.15 63.69Q23.6 53.7 26.79 42.9Q29.99 32.1 32.64 21.31Q35.28 10.53 37.08 0.86ZM0 77.84Q8.29 77.6 18.63 77.16Q28.98 76.72 40.45 76.21Q51.92 75.69 63.84 75.13Q75.76 74.56 87.25 73.96L86.7 87.67Q75.36 88.41 63.8 89.12Q52.24 89.83 41.09 90.47Q29.94 91.11 19.91 91.66Q9.88 92.2 1.63 92.61ZM59.55 51.18 72.9 46.02Q76.93 51.56 80.91 57.69Q84.89 63.82 88.47 70.07Q92.06 76.32 95.02 82.12Q97.99 87.92 100 92.83L85.68 99.14Q83.93 94.24 81.12 88.24Q78.31 82.24 74.73 75.78Q71.15 69.32 67.26 63.01Q63.38 56.69 59.55 51.18Z" />
+</vector>
