@@ -74,12 +74,6 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_delete_confirm">Delete</string>
     <string name="msg_select_tracks_first">Select tracks first, then group them</string>
-    <string name="msg_group_created">Grouped %s</string>
-    <string name="msg_auto_grouped">Created %s</string>
-    <plurals name="group_count">
-        <item quantity="one">%d group</item>
-        <item quantity="other">%d groups</item>
-    </plurals>
 
     <!-- Effects -->
     <string name="effects_title">Effects</string>
