@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Group collapsed: the container is shut and stands in for everything inside it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="14dp"
+    android:height="14dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20"
+    android:tint="@color/accent">
+    <path
+        android:pathData="M7.5,5L12.5,10L7.5,15"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="square" />
+</vector>

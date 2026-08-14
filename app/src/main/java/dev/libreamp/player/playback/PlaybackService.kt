@@ -72,7 +72,9 @@ class PlaybackService : Service() {
             updateNotification(state)
         }.launchIn(scope)
 
-        repository.observeAll().onEach { list ->
+        // The tree flattened, which includes the contents of collapsed groups: collapsing is
+        // tidying, not filtering, and must never change what plays next.
+        repository.observeFlattened().onEach { list ->
             queue = list
             reshuffleIfNeeded()
         }.launchIn(scope)

@@ -24,16 +24,11 @@
     <string name="action_close_search">Close search</string>
     <string name="action_remove_mode">Remove</string>
     <string name="action_delete">Delete</string>
-    <string name="action_choose">Choose…</string>
     <string name="action_reorder">Reorder</string>
     <string name="order_updated">Playlist order updated</string>
-    <string name="hint_sort_by">Sort by:</string>
-    <string name="hint_group_by">Group by:</string>
     <string name="search_hint">Search title, artist, album</string>
     <string name="notif_channel_playback">Playback</string>
     <string name="mode_remove_title">Remove tracks</string>
-    <string name="mode_sort_title">Sort playlist</string>
-    <string name="mode_group_title">Group playlist</string>
     <string name="mode_selected_count">%d selected</string>
     <string name="playlist_no_results">No tracks match “%s”</string>
     <string name="playlist_empty">Nothing in the playlist yet</string>
@@ -45,9 +40,46 @@
     <string name="sort_date_added">Date added</string>
     <string name="sort_last_modified">Last modified</string>
     <string name="sort_reverse">Reverse current order</string>
+
+    <!-- Groups -->
     <string name="group_artist">Artist</string>
     <string name="group_album">Album</string>
     <string name="group_media_type">Media type</string>
+    <string name="group_format">File format</string>
+    <string name="action_group_menu">Group options</string>
+    <string name="group_default_label">New group</string>
+    <string name="group_meta">%1$s · %2$s</string>
+    <string name="group_meta_empty">empty</string>
+    <plurals name="group_track_count">
+        <item quantity="one">%d track</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
+
+    <string name="menu_group_selected">Group selected tracks…</string>
+    <string name="menu_auto_group">Auto-group by</string>
+    <string name="menu_sort_whole_list">Sort whole list by</string>
+    <string name="menu_group_rename">Rename group…</string>
+    <string name="menu_group_sort">Sort inside group by</string>
+    <string name="menu_group_reverse">Reverse inside group</string>
+    <string name="menu_group_ungroup">Ungroup (keep tracks)</string>
+    <string name="menu_group_delete">Delete group and its tracks</string>
+    <string name="menu_group_select">Select this group\'s tracks</string>
+
+    <string name="dialog_new_group_title">Name the group</string>
+    <string name="dialog_rename_group_title">Rename group</string>
+    <string name="dialog_group_name_hint">Group name</string>
+    <string name="dialog_delete_group_title">Delete “%s”?</string>
+    <string name="dialog_delete_group_message">This removes the group and the %s inside it from the playlist.</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete_confirm">Delete</string>
+    <string name="msg_select_tracks_first">Select tracks first, then group them</string>
+    <string name="msg_group_created">Grouped %s</string>
+    <string name="msg_auto_grouped">Created %s</string>
+    <plurals name="group_count">
+        <item quantity="one">%d group</item>
+        <item quantity="other">%d groups</item>
+    </plurals>
 
     <!-- Effects -->
     <string name="effects_title">Effects</string>

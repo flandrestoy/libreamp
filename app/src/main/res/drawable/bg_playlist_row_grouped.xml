@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A member row. Identical to @drawable/bg_playlist_row except that the group's spine
+  takes the leading edge and the now-playing marker is inset to sit just inboard of
+  it, so a playing track inside a group still shows its band instead of having it
+  painted over by the container.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple">
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/divider_row" />
+                </shape>
+            </item>
+            <item android:bottom="1dp">
+                <selector>
+                    <item android:state_selected="true" android:drawable="@color/accent_wash" />
+                    <item android:state_activated="true" android:drawable="@color/surface_row_current" />
+                    <item android:drawable="@color/surface" />
+                </selector>
+            </item>
+            <item
+                android:bottom="1dp"
+                android:gravity="start|fill_vertical"
+                android:width="@dimen/group_spine_width">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/border_strong" />
+                </shape>
+            </item>
+            <item
+                android:left="@dimen/group_spine_width"
+                android:bottom="1dp"
+                android:gravity="start|fill_vertical"
+                android:width="@dimen/row_marker_width">
+                <selector>
+                    <item android:state_activated="true">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/accent" />
+                        </shape>
+                    </item>
+                    <item>
+                        <shape android:shape="rectangle">
+                            <solid android:color="@android:color/transparent" />
+                        </shape>
+                    </item>
+                </selector>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

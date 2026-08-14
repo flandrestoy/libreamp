@@ -20,7 +20,14 @@ data class PlaylistEntryEntity(
     val artist: String?,
     val album: String?,
     val durationMs: Long,
+    /**
+     * Position **within its container** — among top-level items when [groupId] is null
+     * (sharing a number line with [PlaylistGroupEntity.orderIndex]), among its siblings
+     * inside the group otherwise. Never compare indices across containers.
+     */
     val manualOrderIndex: Long,
+    /** Owning group, or null for a loose track sitting at the top level. */
+    val groupId: Long? = null,
     val dateAddedMs: Long,
     val lastModifiedMs: Long = 0L,
     val accessRevoked: Boolean = false,

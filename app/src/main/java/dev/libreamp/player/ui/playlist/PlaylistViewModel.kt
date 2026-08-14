@@ -9,8 +9,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import dev.libreamp.player.data.db.GroupKey
 import dev.libreamp.player.data.db.PlaylistEntryEntity
+import dev.libreamp.player.data.db.PlaylistItem
 import dev.libreamp.player.data.db.PlaylistRepository
 import dev.libreamp.player.data.db.SortKey
+import dev.libreamp.player.data.db.flatten
 import dev.libreamp.player.data.db.matchesQuery
 import dev.libreamp.player.util.MediaProbe
 import kotlinx.coroutines.Dispatchers
@@ -29,13 +31,32 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
     val searchQuery = MutableStateFlow("")
 
     /**
-     * Always the stored manual order (sorting/grouping rewrite that order rather than
-     * being applied as a lens here); the only view-time transform left is the search
-     * filter.
+     * The stored arrangement, with search as the only view-time transform: a filtered
+     * group keeps its header so a match never appears to float free of its container,
+     * and drops out entirely when nothing inside it matched.
+     *
+     * Sorting and grouping are absent here on purpose — they are commands that rewrite
+     * the stored order, not lenses laid over it.
      */
-    val visibleEntries: StateFlow<List<PlaylistEntryEntity>> =
-        combine(repository.observeAll(), searchQuery) { entries, query ->
-            if (query.isBlank()) entries else entries.filter { it.matchesQuery(query) }
+    val visibleItems: StateFlow<List<PlaylistItem>> =
+        combine(repository.observeTree(), searchQuery) { items, query ->
+            if (query.isBlank()) items else items.mapNotNull { item ->
+                when (item) {
+                    is PlaylistItem.LooseTrack ->
+                        item.takeIf { it.entry.matchesQuery(query) }
+
+                    is PlaylistItem.Group -> {
+                        val hits = item.tracks.filter { it.matchesQuery(query) }
+                        // Force the group open: hiding matches behind a collapse would make
+                        // the search look like it found nothing.
+                        if (hits.isEmpty()) null
+                        else item.copy(
+                            group = item.group.copy(collapsed = false),
+                            tracks = hits
+                        )
+                    }
+                }
+            }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
@@ -44,16 +65,44 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
 
     fun setSearchQuery(query: String) { searchQuery.value = query }
 
-    fun applySort(key: SortKey) {
-        viewModelScope.launch { repository.applySort(key) }
+    /** Every track in view order — what "no selection" means for a whole-list command. */
+    fun allTracks(): List<PlaylistEntryEntity> = visibleItems.value.flatten()
+
+    fun applySort(key: SortKey, groupId: Long? = null) {
+        viewModelScope.launch { repository.applySort(key, groupId) }
     }
 
-    fun applyGroup(key: GroupKey) {
-        viewModelScope.launch { repository.applyGroup(key) }
+    fun reverseOrder(groupId: Long? = null) {
+        viewModelScope.launch { repository.reverseOrder(groupId) }
     }
 
-    fun reverseOrder() {
-        viewModelScope.launch { repository.reverseOrder() }
+    fun createGroup(label: String, tracks: List<PlaylistEntryEntity>) {
+        viewModelScope.launch { repository.createGroup(label, tracks) }
+    }
+
+    fun autoGroup(key: GroupKey, scope: List<PlaylistEntryEntity>) {
+        viewModelScope.launch { repository.autoGroup(key, scope) }
+    }
+
+    fun renameGroup(groupId: Long, label: String) {
+        viewModelScope.launch { repository.renameGroup(groupId, label) }
+    }
+
+    fun setCollapsed(groupId: Long, collapsed: Boolean) {
+        viewModelScope.launch { repository.setCollapsed(groupId, collapsed) }
+    }
+
+    fun dissolveGroup(groupId: Long) {
+        viewModelScope.launch { repository.dissolveGroup(groupId) }
+    }
+
+    fun deleteGroupWithTracks(groupId: Long) {
+        viewModelScope.launch { repository.deleteGroupWithTracks(groupId) }
+    }
+
+    /** Persists a finished drag: the arrangement read straight off the rows on screen. */
+    fun applyArrangement(items: List<PlaylistItem>) {
+        viewModelScope.launch { repository.applyArrangement(items) }
     }
 
     fun addFiles(context: Context, uris: List<Uri>) {
@@ -69,10 +118,6 @@ class PlaylistViewModel(application: Application) : AndroidViewModel(application
 
     fun deleteEntries(entries: List<PlaylistEntryEntity>) {
         viewModelScope.launch { repository.delete(entries) }
-    }
-
-    fun applyManualMove(moved: PlaylistEntryEntity, before: PlaylistEntryEntity?, after: PlaylistEntryEntity?) {
-        viewModelScope.launch { repository.applyManualMove(moved, before, after) }
     }
 
     companion object {

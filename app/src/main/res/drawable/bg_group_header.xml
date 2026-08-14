@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Top edge of a group container. The 2dp spine on the leading edge is the vertical
+  that the member rows and the footer continue, so an expanded group reads as one
+  bracketed column rather than a caption followed by unrelated rows. It is drawn in
+  a structural border colour, not the accent: groups are everywhere in a curated
+  list, and the accent ramp is spoken for by playback and active state.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple">
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/hairline_black" />
+                </shape>
+            </item>
+            <item android:top="1dp">
+                <selector>
+                    <item android:state_selected="true" android:drawable="@color/accent_wash" />
+                    <item android:drawable="@color/surface_row_header" />
+                </selector>
+            </item>
+            <item
+                android:top="1dp"
+                android:gravity="start|fill_vertical"
+                android:width="@dimen/group_spine_width">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/border_strong" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</ripple>

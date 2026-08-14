@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single-field dialog body, used for naming and renaming groups. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="@dimen/gutter"
+    android:paddingTop="8dp"
+    android:paddingEnd="@dimen/gutter"
+    android:paddingBottom="4dp">
+
+    <EditText
+        android:id="@+id/edit_text"
+        style="@style/Widget.LibreAmp.SearchField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_field"
+        android:hint="@string/dialog_group_name_hint"
+        android:importantForAutofill="no"
+        android:inputType="textCapSentences"
+        android:paddingStart="10dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="10dp" />
+
+</FrameLayout>

@@ -25,6 +25,14 @@
     <dimen name="row_art">42dp</dimen>
     <dimen name="row_marker_width">3dp</dimen>
     <dimen name="row_number_width">24dp</dimen>
+    <dimen name="row_padding_start">13dp</dimen>
+
+    <!-- Group container: spine down the leading edge, closed off by the footer. -->
+    <dimen name="group_spine_width">2dp</dimen>
+    <dimen name="group_indent">9dp</dimen>
+    <dimen name="group_footer_height">14dp</dimen>
+    <dimen name="group_footer_corner">7dp</dimen>
+    <dimen name="group_playing_dot">7dp</dimen>
     <dimen name="checkbox_size">19dp</dimen>
     <dimen name="mini_player_height">58dp</dimen>
     <dimen name="mini_player_art">56dp</dimen>

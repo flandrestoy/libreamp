@@ -1,14 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Group divider; inert, so it takes no row background or click target. -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  A group's top edge, and unlike the old divider this one is a control: tapping it
+  collapses the container, the overflow opens the group's own verbs, and the drag
+  handle (collapsed only — a shut group is a single row and can be moved as a unit)
+  reorders it among the top-level items.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/text_group_header"
-    style="@style/Text.Mono.Section"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/surface_row_header"
-    android:paddingStart="13dp"
-    android:paddingTop="10dp"
-    android:paddingEnd="@dimen/gutter_list"
-    android:paddingBottom="10dp"
-    tools:text="Slow Light" />
+    android:background="@drawable/bg_group_header"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="9dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="6dp"
+    android:paddingBottom="8dp">
+
+    <ImageView
+        android:id="@+id/image_chevron"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:contentDescription="@null"
+        android:scaleType="center"
+        android:src="@drawable/ic_chevron_down" />
+
+    <CheckBox
+        android:id="@+id/checkbox_group"
+        android:layout_width="@dimen/checkbox_size"
+        android:layout_height="@dimen/checkbox_size"
+        android:layout_marginStart="8dp"
+        android:background="@null"
+        android:button="@drawable/checkbox_square"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="9dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/text_group_label"
+            style="@style/Text.Mono.Section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            tools:text="SLOW LIGHT" />
+
+        <TextView
+            android:id="@+id/text_group_meta"
+            style="@style/Text.Mono.Meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            tools:text="9 tracks · 41:07" />
+    </LinearLayout>
+
+    <!-- Only while collapsed: the group stands in for a track that is playing inside it. -->
+    <View
+        android:id="@+id/dot_playing"
+        android:layout_width="@dimen/group_playing_dot"
+        android:layout_height="@dimen/group_playing_dot"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_playing_dot"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/btn_group_menu"
+        style="@style/Widget.LibreAmp.IconButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="4dp"
+        android:contentDescription="@string/action_group_menu"
+        android:src="@drawable/ic_more_vert" />
+
+    <ImageView
+        android:id="@+id/drag_handle_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:contentDescription="@string/action_reorder"
+        android:src="@drawable/ic_drag_handle"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</LinearLayout>

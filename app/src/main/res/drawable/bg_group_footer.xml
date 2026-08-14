@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The visible bottom boundary of an expanded group, and the reason drag never has to
+  guess: the gap above this row is inside the group, the gap below it is the top
+  level. Making the container's end a real, hit-testable row turns "did I drop that
+  into the group or after it" from an inference about pointer position into a fact
+  about which row the track landed under.
+
+  Drawn as the spine turning a corner: the leading vertical stops here and a hairline
+  runs out under the group's last track.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface" />
+        </shape>
+    </item>
+    <item
+        android:gravity="start|top"
+        android:width="@dimen/group_spine_width"
+        android:height="@dimen/group_footer_corner">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/border_strong" />
+        </shape>
+    </item>
+    <item
+        android:left="@dimen/group_spine_width"
+        android:top="@dimen/group_footer_corner"
+        android:gravity="start|top"
+        android:height="@dimen/hairline">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/border_strong" />
+        </shape>
+    </item>
+    <item android:gravity="bottom" android:height="@dimen/hairline">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/divider_row" />
+        </shape>
+    </item>
+</layer-list>

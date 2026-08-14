@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The closing edge of an expanded group. It carries no content on purpose — its whole
+  job is to be the row that separates "inside this group" from "after this group", both
+  for the eye and for a drop. Kept tall enough to be a comfortable drop target rather
+  than a hairline nobody can hit.
+-->
+<View xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/group_footer"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/group_footer_height"
+    android:background="@drawable/bg_group_footer" />
